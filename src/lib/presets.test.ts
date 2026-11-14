@@ -20,10 +20,10 @@ const out = { outputDir: "/videos" };
 const after = (args: string[], flag: string) => args[args.indexOf(flag) + 1];
 
 describe("buildArgs", () => {
-  it("1080p MP4: sorts by resolution and mp4, merges into mp4", () => {
+  it("1080p MP4: sorts by resolution, H.264 and mp4, merges into mp4", () => {
     const a = buildArgs(DEFAULT_PRESET, out, opts);
     expect(after(a, "-f")).toBe("bv*+ba/b");
-    expect(after(a, "-S")).toBe("res:1080,ext:mp4:m4a");
+    expect(after(a, "-S")).toBe("res:1080,vcodec:h264,ext:mp4:m4a");
     expect(after(a, "--merge-output-format")).toBe("mp4");
     expect(after(a, "-o")).toBe("%(title)s [%(id)s].%(ext)s");
     expect(a).not.toContain("--limit-rate");

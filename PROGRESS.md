@@ -30,11 +30,19 @@ cargo test) passes.
   12%. Real blur on KDE would need KWin's `org_kde_kwin_blur` Wayland protocol (or `_KDE_NET_WM_BLUR_BEHIND_REGION`
   on X11) called from Rust: possible later, owner to decide. Windows/macOS can use `window-vibrancy`.
 
+### Verified with real downloads (2026-11-14, yt-dlp 2026.10.26, through the owner's proxy)
+- yt-dlp's exact arguments from `presets.ts` plus `ytdlp.rs`'s fixed ones: 1080p MP4 (H.264 now preferred; it
+  picked AV1 before), Best MKV, MP3, M4A; subtitles embedded only (mov_text track, `.srt` removed), separate
+  (`.en.srt`), both; description written as `.description` (the app renames it to `.txt`).
+- Progress lines (`TGP|`, `TGPP|`, `TGF|`) parse; post-processor keys are `Merger`, `Metadata`, `EmbedThumbnail`,
+  `ExtractAudio`, `EmbedSubtitle`, `SubtitlesConvertor`, `FixupM4a`, `MoveFiles` (no `FFmpeg` prefix).
+- Tools setup installed yt-dlp and Deno; FFmpeg's download crawled at ~2 KB/s without the proxy and never finished.
+  The installer has no stall timeout and no proxy yet (both planned).
+
 ### Not verified yet (do next)
-1. Tools install from the setup screen (real download).
-2. Real downloads for each quick preset, including: subtitles in all three modes and auto captions (the
-   `--compat-options no-keep-subs` trick for embed-only), description renamed to `.txt`, Pause then Resume
-   continuing from the `.part` file, Cancel deleting the partial files, Pause all holding waiting downloads.
+1. FFmpeg install through the proxy; tool sources (system / custom) once built.
+2. In the app: Pause then Resume continuing from the `.part` file, Cancel deleting the partial files, Pause all
+   holding waiting downloads.
 3. Channel tabs and playlist expansion against real channels.
 4. Tray: menu actions, tooltip, close to tray, `--minimized` login launch; single instance.
 5. Drag and drop from Firefox and Chrome (`dragDropEnabled: false` in tauri.conf.json).

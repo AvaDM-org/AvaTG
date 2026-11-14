@@ -227,20 +227,22 @@ function isPermanent(msg: string): boolean {
   );
 }
 
+// yt-dlp's post-processor keys as reported in progress lines (checked against yt-dlp 2026.10.26).
 const POSTPROCESSORS: Record<string, string> = {
   Merger: "Merging",
-  FFmpegVideoRemuxer: "Remuxing",
-  FFmpegVideoConvertor: "Converting",
-  FFmpegMetadata: "Writing metadata",
+  VideoRemuxer: "Remuxing",
+  VideoConvertor: "Converting",
+  Metadata: "Writing metadata",
   EmbedThumbnail: "Adding thumbnail",
-  FFmpegEmbedSubtitle: "Adding subtitles",
-  FFmpegSubtitlesConvertor: "Converting subtitles",
+  EmbedSubtitle: "Adding subtitles",
+  SubtitlesConvertor: "Converting subtitles",
+  FixupM4a: "Fixing the file",
   SponsorBlock: "Finding sponsors",
   ModifyChapters: "Cutting sponsors",
   MoveFiles: "Finishing",
 };
 
 function postprocessName(pp: string, formatLabel: string): string {
-  if (pp === "FFmpegExtractAudio") return `Converting to ${formatLabel.split(" ")[0]}`;
+  if (pp === "ExtractAudio") return `Converting to ${formatLabel.split(" ")[0]}`;
   return POSTPROCESSORS[pp] ?? "Processing";
 }

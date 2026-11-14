@@ -127,7 +127,8 @@ export function buildArgs(p: Preset, out: OutputOptions, o: DownloadOptions): st
     a.push("-f", p.mode === "av" ? "bv*+ba/b" : "bv/bv*");
     const sort: string[] = [];
     if (p.maxHeight) sort.push(`res:${p.maxHeight}`);
-    if (p.container === "mp4") sort.push("ext:mp4:m4a");
+    // MP4 should play everywhere: prefer H.264 over AV1/VP9 (YouTube has no H.264 above 1080p; then it falls back).
+    if (p.container === "mp4") sort.push("vcodec:h264", "ext:mp4:m4a");
     else if (p.container === "webm") sort.push("ext:webm:webm");
     if (sort.length) a.push("-S", sort.join(","));
     if (p.mode === "av") a.push("--merge-output-format", p.container);
