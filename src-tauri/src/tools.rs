@@ -5,8 +5,8 @@
 //! Sources (verified 2026-11):
 //! - yt-dlp:  github.com/yt-dlp/yt-dlp releases (`yt-dlp.exe`, `yt-dlp_macos`, `yt-dlp_linux`, ...)
 //! - Deno:    github.com/denoland/deno releases (`deno-<target-triple>.zip`)
-//! - ffmpeg:  Windows -> github.com/yt-dlp/FFmpeg-Builds (`ffmpeg-master-latest-win64-gpl.zip`)
-//!            macOS/Linux -> ffmpeg.martin-riedl.de scripted release URLs (`ffmpeg.zip`, `ffprobe.zip`)
+//! - ffmpeg on Windows: github.com/yt-dlp/FFmpeg-Builds (`ffmpeg-master-latest-win64-gpl.zip`)
+//! - ffmpeg on macOS/Linux: ffmpeg.martin-riedl.de scripted release URLs (`ffmpeg.zip`, `ffprobe.zip`)
 
 use futures_util::StreamExt;
 use serde::Serialize;
@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::process::hidden_command;
+use crate::ytdlp::hidden_command;
 
 pub const EXE: &str = if cfg!(windows) { ".exe" } else { "" };
 
@@ -105,7 +105,9 @@ fn ffmpeg_sources() -> Result<Vec<(String, Vec<&'static str>)>, String> {
             _ => return Err(unsupported()),
         };
         return Ok(vec![(
-            format!("https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-{build}-gpl.zip"),
+            format!(
+                "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-{build}-gpl.zip"
+            ),
             vec!["ffmpeg", "ffprobe"],
         )]);
     }
@@ -119,7 +121,8 @@ fn ffmpeg_sources() -> Result<Vec<(String, Vec<&'static str>)>, String> {
         "aarch64" => "arm64",
         _ => return Err(unsupported()),
     };
-    let base = format!("https://ffmpeg.martin-riedl.de/redirect/latest/{os_name}/{arch_name}/release");
+    let base =
+        format!("https://ffmpeg.martin-riedl.de/redirect/latest/{os_name}/{arch_name}/release");
     Ok(vec![
         (format!("{base}/ffmpeg.zip"), vec!["ffmpeg"]),
         (format!("{base}/ffprobe.zip"), vec!["ffprobe"]),
@@ -154,7 +157,12 @@ async fn download(app: &AppHandle, id: &str, url: &str, dest: &Path) -> Result<(
             last_emit = downloaded;
             let _ = app.emit(
                 "tool-progress",
-                ToolProgress { id: id.into(), stage: "download".into(), downloaded, total },
+                ToolProgress {
+                    id: id.into(),
+                    stage: "download".into(),
+                    downloaded,
+                    total,
+                },
             );
         }
     }
@@ -226,7 +234,12 @@ async fn info_for(app: &AppHandle, id: &str) -> Result<ToolInfo, String> {
         "ytdlp" => {
             let p = tool_path(app, "yt-dlp")?;
             let v = run_version(&p, "--version").await;
-            ToolInfo { id: id.into(), name: "yt-dlp".into(), installed: v.is_some(), version: v }
+            ToolInfo {
+                id: id.into(),
+                name: "yt-dlp".into(),
+                installed: v.is_some(),
+                version: v,
+            }
         }
         "deno" => {
             let p = tool_path(app, "deno")?;
@@ -234,7 +247,12 @@ async fn info_for(app: &AppHandle, id: &str) -> Result<ToolInfo, String> {
             let v = run_version(&p, "--version")
                 .await
                 .map(|l| l.split_whitespace().nth(1).unwrap_or(&l).to_string());
-            ToolInfo { id: id.into(), name: "Deno (JS runtime)".into(), installed: v.is_some(), version: v }
+            ToolInfo {
+                id: id.into(),
+                name: "Deno (JS runtime)".into(),
+                installed: v.is_some(),
+                version: v,
+            }
         }
         "ffmpeg" => {
             let ff = tool_path(app, "ffmpeg")?;
@@ -244,7 +262,12 @@ async fn info_for(app: &AppHandle, id: &str) -> Result<ToolInfo, String> {
                 .await
                 .map(|l| l.split_whitespace().nth(2).unwrap_or(&l).to_string());
             let installed = v.is_some() && fp.exists();
-            ToolInfo { id: id.into(), name: "ffmpeg + ffprobe".into(), installed, version: v }
+            ToolInfo {
+                id: id.into(),
+                name: "ffmpeg + ffprobe".into(),
+                installed,
+                version: v,
+            }
         }
         _ => return Err(format!("Unknown tool {id}")),
     };
@@ -297,7 +320,12 @@ pub async fn install_tool(app: AppHandle, id: String) -> Result<ToolInfo, String
 fn emit_stage(app: &AppHandle, id: &str, stage: &str) {
     let _ = app.emit(
         "tool-progress",
-        ToolProgress { id: id.into(), stage: stage.into(), downloaded: 0, total: None },
+        ToolProgress {
+            id: id.into(),
+            stage: stage.into(),
+            downloaded: 0,
+            total: None,
+        },
     );
 }
 

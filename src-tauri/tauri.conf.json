@@ -16,8 +16,12 @@
         "title": "TubeGrab",
         "width": 1180,
         "height": 780,
-        "minWidth": 820,
-        "minHeight": 560
+        "minWidth": 900,
+        "minHeight": 560,
+        "visible": false,
+        "decorations": false,
+        "transparent": true,
+        "dragDropEnabled": false
       }
     ],
     "security": {

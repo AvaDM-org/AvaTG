@@ -56,7 +56,11 @@ fn error_from_stderr(stderr: &str) -> String {
     }
     let tail: Vec<&str> = stderr.lines().rev().take(5).collect();
     let msg = tail.into_iter().rev().collect::<Vec<_>>().join("\n");
-    if msg.trim().is_empty() { "yt-dlp failed".into() } else { msg }
+    if msg.trim().is_empty() {
+        "yt-dlp failed".into()
+    } else {
+        msg
+    }
 }
 
 /// `yt-dlp -J [--flat-playlist] <url>` → parsed JSON.
@@ -100,7 +104,10 @@ fn num(s: &str) -> Option<f64> {
 }
 
 fn parse_line(id: &str, line: &str) -> Option<DownloadEvent> {
-    let base = DownloadEvent { id: id.into(), ..Default::default() };
+    let base = DownloadEvent {
+        id: id.into(),
+        ..Default::default()
+    };
     if let Some(rest) = line.strip_prefix("TGP|") {
         let f: Vec<&str> = rest.split('|').collect();
         if f.len() < 6 {
@@ -184,9 +191,13 @@ pub async fn run_download(
     ]);
     cmd.args(&args);
     cmd.arg("--").arg(&url);
-    cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).stdin(Stdio::null());
+    cmd.stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .stdin(Stdio::null());
 
-    let mut child = cmd.spawn().map_err(|e| format!("Could not start yt-dlp: {e}"))?;
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Could not start yt-dlp: {e}"))?;
     let pid = child.id();
     let (tx, rx) = oneshot::channel();
     jobs.0.lock().unwrap().insert(id.clone(), tx);
