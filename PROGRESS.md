@@ -21,6 +21,15 @@ cargo test) passes.
 - Builds, lints, tests; the app window opens and creates its database.
 - Tool download URLs (README table, 2026-11-14).
 
+### Known issues
+- **Blank window in `tauri dev`** on the owner's machine came from the webview not reaching the Vite dev server
+  while a VPN/system proxy app was running (turning it off fixed it). Vite is pinned to 127.0.0.1 and WebKitGTK's
+  DMA-BUF renderer is off on Linux (`main.rs`). Release builds load the frontend from inside the app, so they don't
+  depend on the dev server.
+- **No blur behind the window on Linux.** WebKitGTK cannot ask the compositor for blur, so Linux caps transparency at
+  12%. Real blur on KDE would need KWin's `org_kde_kwin_blur` Wayland protocol (or `_KDE_NET_WM_BLUR_BEHIND_REGION`
+  on X11) called from Rust: possible later, owner to decide. Windows/macOS can use `window-vibrancy`.
+
 ### Not verified yet (do next)
 1. Tools install from the setup screen (real download).
 2. Real downloads for each quick preset, including: subtitles in all three modes and auto captions (the
