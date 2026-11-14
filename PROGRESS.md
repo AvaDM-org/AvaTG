@@ -38,7 +38,7 @@ reopened; columns **reorder, resize and hide like Dolphin/Explorer**.
 | 3 | Generic table: column defs, drag to reorder, resize grips, header right-click menu (show/hide, reset), horizontal scroll, sort by header (arrow, click again reverses). Layout, sort and filters saved | done |
 | 4 | Virtualized rows (own fixed-height hook, no dependency): long channel lists stay fast | done |
 | 5 | Type filter (All / Video / Audio, live counts) and new columns: Added, Channel, Duration, Took, Avg speed, Folder | done |
-| 6 | History stats: started/finished time, time running and time transferring summed across resumes; "Took" and "Average speed"; the real file size once finished | todo |
+| 6 | History stats: started/finished time, time running and time transferring summed across resumes; "Took" and "Average speed"; the real file size once finished | done |
 | 7 | yt-dlp output per download (warnings no longer hidden): a log kept in memory, WARNING lines as toasts (once per message) | todo |
 | 8 | Detail panel: General / Format / Log tabs, action column, selection summary for several rows | todo |
 | 9 | "N interrupted · Resume" status-bar chip | todo |

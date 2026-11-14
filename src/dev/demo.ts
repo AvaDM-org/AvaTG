@@ -161,6 +161,7 @@ const handlers: Record<string, (a: Args) => unknown> = {
     run.reject("cancelled");
   },
   ytdlp_json: (a) => fakeVideoJson(String(a.url)),
+  file_sizes: (a) => (a.paths as string[]).map(() => 123_456_789),
   window_blur: () => false,
   system_proxy: () => null,
   install_channel: () => "auto",

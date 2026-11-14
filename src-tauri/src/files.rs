@@ -1,4 +1,4 @@
-//! File clean-up for cancelled and deleted downloads.
+//! Files on disk: clean-up for cancelled and deleted downloads, sizes, the description file.
 
 use std::path::Path;
 
@@ -37,6 +37,20 @@ pub fn delete_files(paths: Vec<String>) -> Result<(), String> {
     Ok(())
 }
 
+/// The size of each file in bytes, or None when it doesn't exist (also used to ask whether files exist).
+#[tauri::command]
+pub fn file_sizes(paths: Vec<String>) -> Vec<Option<u64>> {
+    paths
+        .iter()
+        .map(|p| {
+            std::fs::metadata(p)
+                .ok()
+                .filter(|m| m.is_file())
+                .map(|m| m.len())
+        })
+        .collect()
+}
+
 /// yt-dlp writes the description as `<name>.description`; AvaTG saves it as `<name>.txt` next to the video.
 #[tauri::command]
 pub fn rename_description(video_path: String) -> Result<(), String> {
@@ -67,6 +81,11 @@ mod tests {
             "the empty .avatg-parts folder is removed too"
         );
         assert!(root.join("Keep.mp4").exists());
+        let keep = root.join("Keep.mp4").to_string_lossy().into_owned();
+        assert_eq!(
+            file_sizes(vec![keep, root.to_string_lossy().into_owned()]),
+            vec![Some(1), None]
+        );
         std::fs::remove_dir_all(&root).unwrap();
     }
 }

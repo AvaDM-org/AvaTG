@@ -72,6 +72,8 @@ export const saveSetting = (key: string, value: unknown) => invoke<void>("settin
 /** Deletes a download's working folder of unfinished files (`<download folder>/.avatg-parts/<id>`). */
 export const deleteParts = (dir: string) => invoke<void>("delete_parts", { dir });
 export const deleteFiles = (paths: string[]) => invoke<void>("delete_files", { paths });
+/** Each file's size in bytes, or null when it doesn't exist. */
+export const fileSizes = (paths: string[]) => invoke<(number | null)[]>("file_sizes", { paths });
 export const renameDescription = (videoPath: string) => invoke<void>("rename_description", { videoPath });
 
 // proxy.rs

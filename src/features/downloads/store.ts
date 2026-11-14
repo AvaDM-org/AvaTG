@@ -5,6 +5,7 @@ import {
   deleteDownloads,
   deleteFiles,
   deleteParts,
+  fileSizes,
   loadDownloads,
   onDownloadEvent,
   renameDescription,
@@ -15,6 +16,7 @@ import {
 } from "../../ipc";
 import { buildArgs } from "../../lib/presets";
 import { downloadOptions, getSettings, useSettings } from "../settings/store";
+import { RunClock } from "./history";
 import type { DownloadRecord, LiveProgress } from "./types";
 
 /** What happens when a stopped yt-dlp process ends. "requeued": over the downloads-at-a-time limit. */
@@ -53,6 +55,7 @@ interface DownloadsStore {
 }
 
 const stopping = new Map<string, StopReason>();
+const clocks = new Map<string, RunClock>();
 const EMPTY_LIVE: LiveProgress = { speed: null, eta: null, phase: null, part: 0 };
 
 export const useDownloads = create<DownloadsStore>((set, get) => {
@@ -87,24 +90,48 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
     }
   };
 
+  /** Stop the run's clock and add its times to the record's history. */
+  const runTimes = (id: string): Partial<DownloadRecord> => {
+    const clock = clocks.get(id);
+    clocks.delete(id);
+    const d = find(id);
+    if (!clock || !d) return {};
+    const t = clock.stop(Date.now());
+    return { activeMs: (d.activeMs ?? 0) + t.activeMs, transferMs: (d.transferMs ?? 0) + t.transferMs };
+  };
+
   const start = async (id: string) => {
     const d = find(id);
     if (!d) return;
-    patch(id, { status: "running", error: null });
+    const now = Date.now();
+    clocks.set(id, new RunClock(now));
+    patch(id, { status: "running", error: null, startedAt: now });
     setLive(id, { part: 0, phase: "Starting", speed: null, eta: null });
     try {
       const file = await runDownload(id, d.url, argsFor(d), getSettings().cookiesBrowser);
       if (file && d.saveDescription) await renameDescription(file).catch(() => {});
-      patch(id, { status: "done", percent: 100, filepath: file ?? d.filepath, autoRetries: 0 });
+      const filepath = file ?? d.filepath;
+      // The finished file's real size (the progress lines only know the video stream's size).
+      const [size] = filepath ? await fileSizes([filepath]).catch(() => [null]) : [null];
+      patch(id, {
+        status: "done",
+        percent: 100,
+        filepath,
+        autoRetries: 0,
+        finishedAt: Date.now(),
+        sizeBytes: size ?? find(id)?.sizeBytes ?? null,
+        ...runTimes(id),
+      });
       cleanUp(d);
     } catch (e) {
       const reason = stopping.get(id);
       stopping.delete(id);
       const msg = String(e);
-      if (reason === "paused") patch(id, { status: "paused" });
-      else if (reason === "requeued") patch(id, { status: "queued" });
+      const times = runTimes(id);
+      if (reason === "paused") patch(id, { status: "paused", ...times });
+      else if (reason === "requeued") patch(id, { status: "queued", ...times });
       else if (reason === "cancelled") {
-        patch(id, { status: "cancelled", percent: null });
+        patch(id, { status: "cancelled", percent: null, activeMs: 0, transferMs: 0 });
         cleanUp(d);
       } else if (reason === "removed") {
         cleanUp(d); // again, now that yt-dlp has stopped writing
@@ -112,9 +139,9 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
         const cur = find(id);
         const retries = cur?.autoRetries ?? 0;
         if (retries < getSettings().autoResume && !isPermanent(msg)) {
-          patch(id, { status: "queued", autoRetries: retries + 1, error: msg });
+          patch(id, { status: "queued", autoRetries: retries + 1, error: msg, ...times });
         } else {
-          patch(id, { status: "failed", error: msg });
+          patch(id, { status: "failed", error: msg, ...times });
         }
       }
     }
@@ -164,8 +191,11 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
     resume: (ids) => {
       for (const id of ids) {
         const s = find(id)?.status;
-        if (s === "paused" || s === "interrupted" || s === "failed" || s === "cancelled") {
+        if (s === "paused" || s === "interrupted" || s === "failed") {
           patch(id, { status: "queued", error: null, autoRetries: 0 });
+        } else if (s === "cancelled") {
+          // Its files were deleted: a fresh download, with a fresh history.
+          patch(id, { status: "queued", error: null, autoRetries: 0, activeMs: 0, transferMs: 0, finishedAt: null });
         }
       }
       pump();
@@ -176,7 +206,7 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
       for (const id of ids) {
         const d = find(id);
         if (d && d.status !== "running" && d.status !== "done") {
-          patch(id, { status: "cancelled", percent: null });
+          patch(id, { status: "cancelled", percent: null, activeMs: 0, transferMs: 0 });
           cleanUp(d);
         }
       }
@@ -233,16 +263,20 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
     const d = find(ev.id);
     if (!d) return;
     const live: LiveProgress = get().live[ev.id] ?? EMPTY_LIVE;
+    const clock = clocks.get(ev.id);
     if (ev.kind === "progress") {
       if (ev.status === "finished") {
+        clock?.idle(Date.now());
         setLive(ev.id, { part: live.part + 1, speed: null, eta: null });
         return;
       }
+      clock?.receiving(Date.now());
       const percent = ev.total ? Math.min(100, ((ev.downloaded ?? 0) / ev.total) * 100) : null;
       const phase = d.audioOnly ? "Audio" : live.part === 0 ? "Video" : "Audio";
       setLive(ev.id, { phase, speed: ev.speed ?? null, eta: ev.eta ?? null });
       patch(ev.id, { percent, sizeBytes: live.part === 0 ? (ev.total ?? d.sizeBytes) : d.sizeBytes }, false);
     } else if (ev.kind === "postprocess" && ev.status === "started") {
+      clock?.idle(Date.now());
       setLive(ev.id, { phase: postprocessName(ev.postprocessor ?? "", d.formatLabel), speed: null, eta: null });
     } else if (ev.kind === "file" && ev.filepath) {
       patch(ev.id, { filepath: ev.filepath }, false);
