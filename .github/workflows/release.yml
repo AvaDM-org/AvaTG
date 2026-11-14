@@ -17,7 +17,7 @@ jobs:
     outputs:
       release_id: ${{ steps.release.outputs.id }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: version
         run: bash .github/scripts/release-version.sh "$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
       - name: Tag matches the app version
@@ -62,7 +62,7 @@ jobs:
             args: --target x86_64-apple-darwin
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Linux build dependencies
         if: startsWith(matrix.platform, 'ubuntu')
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev libxdo-dev libwayland-dev patchelf
