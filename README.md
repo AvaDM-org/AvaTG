@@ -77,14 +77,14 @@ Design rule: Rust only runs processes and manages files. All yt-dlp format and p
 
 ## Build
 
-Prerequisites: Node 20+, Rust (stable, via rustup), and the platform prerequisites from
+Prerequisites: Bun 1.x, Rust (stable, via rustup), and the platform prerequisites from
 <https://v2.tauri.app/start/prerequisites/>: MSVC C++ Build Tools + WebView2 on Windows, Xcode CLT on macOS,
 and webkit2gtk etc. on Linux.
 
 ```bash
-npm install
-npm run tauri dev      # run in development
-npm run tauri build    # installers in src-tauri/target/release/bundle
+bun install
+bun run tauri dev      # run in development
+bun run tauri build    # installers in src-tauri/target/release/bundle
 ```
 
 Each OS builds its own installers. For all three, use a GitHub Actions matrix (`tauri-apps/tauri-action`).

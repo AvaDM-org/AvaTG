@@ -2,8 +2,9 @@
 
 ## Status (2026-11-14)
 
-The first full implementation is written but has **never been compiled or run**. The machine it was written on
-has no Rust or MSVC toolchain. The owner continues on another machine.
+The first full implementation is written but has **never been compiled or run**. This machine (Fedora) now has
+Rust 1.98.1 and rust-analyzer, so the Rust side can be built here. A UI redesign is being planned (see "UI redesign"
+below) before more code is written.
 
 ### Verified
 - `npx tsc --noEmit` passes and `npx vite build` succeeds (frontend only).
@@ -30,16 +31,45 @@ has no Rust or MSVC toolchain. The owner continues on another machine.
 On the other machine (with Rust installed via rustup, plus the Tauri prerequisites):
 
 ```bash
-cd tubegrab && npm install && npm run tauri dev
+cd tubegrab && bun install && bun run tauri dev
 ```
 
 Fix any compile errors in `src-tauri/src/*.rs`, then work through the "Not verified" list above. After that:
 - Add a GitHub Actions release workflow (`tauri-apps/tauri-action`, matrix: windows-latest, macos-latest
   for aarch64 and x86_64, ubuntu-22.04).
-- Replace the template icons: `npm run tauri icon path/to/icon.png`.
+- Replace the template icons: `bun run tauri icon path/to/icon.png`.
 - Optional: the Tauri updater plugin for the app itself (tools already update on their own).
+
+## UI redesign (in planning)
+
+The look and structure follow AvaDM (`/data/projects/AvaDM/docs/DESIGN.md`, canvas "AvaDM main window").
+The mockups live in the Claude design canvas "TubeGrab main window":
+https://claude.ai/artifact/QkT75qvfYzuqEXLTHNdXEo
+
+Open: the code architecture and coding standards (proposal made, not yet approved).
 
 ## Decisions (owner)
 - Stack: Tauri 2 + React/TS.
 - Tools are downloaded on first run into app data and updated from Settings → Tools. They are not bundled.
 - Project name: tubegrab.
+- Package manager: **bun** (2026-11-14). `bun.lock`, `bun run dev/build` in `tauri.conf.json`.
+- UI (2026-11-14):
+  - AvaDM's **Dark glass** look only. No Frost/light theme. Keep the glass (transparency) effect with a strength
+    setting if Tauri can do it, with a solid fallback.
+  - Settings mirror AvaDM's settings pages. Keep only the options yt-dlp (or the app) can really do; drop the rest.
+  - **Tray app like AvaDM**: closing hides to the tray, downloads keep running in the background, launch at login
+    (starts in the tray). **No scheduler or queues in v1.**
+  - Subtitles: offered per download, including **auto-generated captions**. A setting chooses embedded, separate
+    files, or both.
+  - Description: an option to save it as a **`.txt` file next to the video**.
+  - Speed limit: **per download** only (`--limit-rate`); yt-dlp has no shared total limit.
+- Download records (2026-11-14): keep one **"recipe" per download in SQLite** (link, format choice, folder, status),
+  like AvaDM. yt-dlp's own `.part` files do the byte-level resuming; Resume re-runs the same command. No AvaDM-style
+  working files.
+
+## Claude Code setup for this repo
+- Official plugins (project scope, `.claude/settings.json`): `rust-analyzer-lsp`, `typescript-lsp`
+  (needs `typescript-language-server` on PATH; installed with `bun add -g typescript-language-server typescript`),
+  `code-simplifier`.
+- Skills in `.claude/skills/`: Vercel's `react-best-practices` and `composition-patterns` (vercel-labs/agent-skills,
+  MIT). Their Next.js/server rules do not apply to this app. There is no official Tauri skill.
