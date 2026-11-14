@@ -32,6 +32,9 @@ cargo test) passes.
   (the window must be on screen); without blur the window stays at most 12% see-through, with blur 40%.
   X11 sessions get no blur yet (`_KDE_NET_WM_BLUR_BEHIND_REGION` would add it).
 
+- In the app (owner, 2026-11-14): downloads work end to end; the repaint glitch (parts of the window disappearing
+  on click) went away after dropping the `WEBKIT_DISABLE_DMABUF_RENDERER` override.
+
 ### Not verified yet (do next)
 1. FFmpeg install through the proxy; tool sources (system / custom) once built.
 2. In the app: Pause then Resume continuing from the `.part` file, Cancel deleting the partial files, Pause all
