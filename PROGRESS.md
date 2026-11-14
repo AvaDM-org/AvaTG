@@ -34,7 +34,7 @@ reopened; columns **reorder, resize and hide like Dolphin/Explorer**.
 | # | Item | Status |
 |---|---|---|
 | 1 | DB backup before each schema migration (`avatg.db.bak-v<N>`, `VACUUM INTO`) | done |
-| 2 | Dev-only demo mode: the frontend runs in a normal browser with mocked IPC (`?demo`), one row per status, fake progress; a `?gallery` page of every control. Never in release builds | todo |
+| 2 | Dev-only demo mode: the frontend runs in a normal browser with mocked IPC (`?demo`), one row per status, fake progress; a `?gallery` page of every control. Never in release builds | demo done (`src/dev/demo.ts`); gallery comes with #13 |
 | 3 | Generic table: column defs, drag to reorder, resize grips, header right-click menu (show/hide, reset), horizontal scroll, sort by header (arrow, click again reverses). Layout, sort and filters saved | todo |
 | 4 | Virtualized rows (own fixed-height hook, no dependency): long channel lists stay fast | todo |
 | 5 | Type filter (All / Video / Audio, live counts) and new columns: Added, Channel, Duration, Took, Avg speed, Folder | todo |
@@ -48,11 +48,15 @@ reopened; columns **reorder, resize and hide like Dolphin/Explorer**.
 | 13 | Contrast test for built-in themes (Fg2/Fg3 ≥ 4.5:1) | todo |
 | 14 | Linux: applications-menu entry for the AppImage, AppImage-safe autostart path, self-repair at startup | todo |
 | 15 | Windows: the uninstaller removes the login entry (NSIS hook) | todo |
+| 16 | Theme builder in Settings › Appearance: pick each colour with a live preview that shows where it is used; it writes the theme's JSON file as you edit. Theme cards get Edit, Duplicate, Export, Import (owner request, 2026-11-15) | todo |
 
 ## How to work
 
 - `bun run tauri dev` runs the app; `bun run check` = tsc, eslint, vitest, rustfmt, clippy -D warnings, cargo test.
 - Debug builds open the web inspector automatically (`lib.rs`).
+- **Demo mode** (dev only): `bun run dev`, then open `http://127.0.0.1:1420/?demo` in a normal browser. Every Rust
+  command is mocked in `src/dev/demo.ts` (one row per status, fake progress, no disk or network). Options:
+  `&many=2000`, `&empty`, `&setup`. Handy for screenshots and for checking UI changes without a real download.
 - Releases: see README "Releases and updates". Version lives in `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`
   and `package.json`; `release.yml` refuses a tag that does not match them or has no `CHANGELOG.md` section.
 - Updater signing key: private key `~/.tauri/avatg.key`, password `~/.tauri/avatg.key.password` (owner's machine,
