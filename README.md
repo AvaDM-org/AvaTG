@@ -1,28 +1,27 @@
 # AvaTG
 
-A simple cross-platform desktop app for downloading from YouTube, built with **Tauri 2 + React + TypeScript**.
-It uses [yt-dlp](https://github.com/yt-dlp/yt-dlp), [Deno](https://deno.com) (the JavaScript runtime yt-dlp needs for
-YouTube) and [ffmpeg](https://ffmpeg.org). The app downloads these tools on first run and can update them later.
+A cross-platform desktop app for downloading videos and audio from YouTube (and any site yt-dlp supports), built
+with **Tauri 2 + React + TypeScript** and designed like its sibling [AvaDM](https://github.com/AvaDM-org/AvaDM).
+It uses [yt-dlp](https://github.com/yt-dlp/yt-dlp), [Deno](https://github.com/denoland/deno) (the JavaScript runtime
+yt-dlp needs for YouTube) and [FFmpeg](https://ffmpeg.org): copies already on your system are used when their
+versions are good, and the rest are downloaded once.
 
 ## What it does
 
-Paste a link and press **Go** (or just paste it; the app starts on paste):
+Add a link with **Ctrl+V**, the clipboard button, **Add link**, or by dropping it on the window:
 
 | Link | What you get |
 |---|---|
-| Video (`watch?v=`, `youtu.be`, `shorts/`) | Thumbnail and title, preset chips, mode (video+audio / video only / audio only), the video's **real** resolutions with size estimates, container or audio format, bitrate, extras |
-| Playlist (`/playlist?list=`) | A list where everything starts selected: checkboxes, **shift-click ranges**, All / None / Invert, title filter, selected count and total length. Preset panel on the side |
-| Channel (`/@handle`, `/channel/…`, `/c/…`, `/user/…`) | **Videos / Shorts / Playlists** tabs. Pick any mix. Each selected playlist is expanded into its videos and saved in its own folder |
-| `watch?v=…&list=…` | Treated as a single video, with a banner to open the whole playlist |
-| Any other site yt-dlp supports | Video or playlist view, depending on what yt-dlp returns |
+| Video (`watch?v=`, `youtu.be`, `shorts/`) | A dialog: preset menu, video and audio / video only / audio only, the video's **real** resolutions with size estimates, format, subtitles (with auto captions), description, thumbnail, chapters, SponsorBlock |
+| Playlist (`/playlist?list=`) | A page where everything starts selected: checkboxes, **Shift-click ranges**, Select all / none / Invert, title filter, total length, format panel on the side |
+| Channel (`/@handle`, `/channel/…`, `/c/…`, `/user/…`) | **Videos / Shorts / Playlists** tabs; pick any mix; each playlist gets its own folder |
+| Several links at once | One list of all their videos |
 
-Downloads go to a queue on the right. You get progress, speed, ETA, and the current step (merging, converting,
-embedding). Each job can be cancelled or retried, and finished files can be played or shown in their folder.
-You can set 1–4 downloads to run at once.
-
-Quick presets: **Best quality** (MKV), **1080p MP4**, **720p MP4**, **MP3 audio**, **M4A audio** (no re-encode).
-Extras: embed thumbnail, metadata and chapters, subtitles (choose the languages), and SponsorBlock removal.
-Settings: output folder, parallel downloads, cookies from a browser (for age-restricted or members-only videos), and a tools panel.
+Downloads land in the main list (search, status filter, sort, multi-select, right-click menu) with progress, speed,
+time left and the current step. Pause, resume (continues from the partial file), cancel, retry, **Pause all**.
+AvaTG lives in the tray, so downloads continue with the window closed. Settings: download folder, downloads at a
+time, per-download speed limit, retries, proxy (system, custom or none), subtitles mode, cookies from a browser,
+themes (Cherry dark, Dark glass, or your own JSON), glass effect, tools, updates.
 
 ## How the tools are shipped and updated
 

@@ -1,132 +1,145 @@
 # Progress
 
+Handoff file: a new session should be able to continue from this file, `CLAUDE.md` and `README.md` alone.
+
 ## Status (2026-11-15)
 
-**AvaTG (renamed from TubeGrab) is on GitHub: https://github.com/AvaDM-org/AvaTG (public, branch `main`).**
-The app builds and runs on Linux (Fedora 44, KDE Wayland), including a release RPM. `bun run check` passes, and so
-does the Check workflow on GitHub. Self-updates and the release workflow are written but no release has been cut.
+**AvaTG** (formerly TubeGrab) is a YouTube/yt-dlp downloader built like AvaDM, on Tauri 2 + React/TypeScript.
+Code: https://github.com/AvaDM-org/AvaTG (public, branch `main`). The local folder is still `/data/projects/tubegrab`.
+
+- Works on Linux (owner's Fedora 44, KDE Plasma 6.8 Wayland): dev runs, a release RPM, real downloads, blur.
+- `bun run check` passes locally and the **Check** workflow passes on GitHub.
+- **`v0.1.0` is built as a DRAFT release** (all platforms, signed update feed, SHA256SUMS). Not published yet.
+- Design canvas (all screens, Dark glass and Cherry dark): https://claude.ai/artifact/QkT75qvfYzuqEXLTHNdXEo
 
 ### Next
-1. Cut a test release (`v0.1.0`) and check every installer and the update feed; then a second version to test an
-   actual update. Pre-release tags may fail the RPM build (RPM versions cannot contain `-`).
-2. Check the Cherry dark theme and the theme system in the app (built 2026-11-15, see below).
-3. Test on Windows and macOS (glass via `window-vibrancy`, the updater).
+1. Owner publishes the `v0.1.0` draft. Then test a real self-update: release `v0.1.1` (bump the three version
+   fields, CHANGELOG entry, tag), run 0.1.0 as an AppImage on Linux and update it from the notice.
+2. Test the installers on Windows and macOS (nothing has run there yet; macOS builds are unsigned, so users need
+   right-click › Open the first time).
+3. The "Not built yet" items below, in whatever order the owner picks.
 
-### Architecture (approved 2026-11-14)
-- Rust (`src-tauri/src`): `ytdlp.rs` runs yt-dlp, `tools.rs` installs the tools, `db.rs` stores download recipes and
-  settings in SQLite (`<app data>/avatg.db`, JSON document per download), `files.rs` deletes partial files and
-  renames the description to `.txt`, `tray.rs` is the tray menu and close-to-tray. Errors are `String`s.
-- Frontend (`src`): `ipc.ts` is every command and event; `lib/` is pure logic with tests (presets → yt-dlp args,
-  link parsing, formatting, yt-dlp JSON); `features/{downloads,picker,settings,tools}` hold each feature's store,
-  views and CSS module; `components/ui` holds the shared controls; `styles/tokens.css` is AvaDM's Dark glass.
-- State: Zustand. The download queue lives in the frontend (the webview keeps running while the window is hidden).
-- Not used, on purpose: shadcn/Tailwind (CSS Modules plus the AvaDM tokens cover it), tauri-specta (still a
-  release candidate; `ipc.ts` is the single hand-typed mirror), a router.
+## How to work
 
-### Verified
-- Builds, lints, tests; the app window opens and creates its database.
-- Tool download URLs (README table, 2026-11-14).
+- `bun run tauri dev` runs the app; `bun run check` = tsc, eslint, vitest, rustfmt, clippy -D warnings, cargo test.
+- Debug builds open the web inspector automatically (`lib.rs`).
+- Releases: see README "Releases and updates". Version lives in `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`
+  and `package.json`; `release.yml` refuses a tag that does not match them or has no `CHANGELOG.md` section.
+- Updater signing key: private key `~/.tauri/avatg.key`, password `~/.tauri/avatg.key.password` (owner's machine,
+  never commit), also stored as repo secrets `TAURI_SIGNING_PRIVATE_KEY` / `_PASSWORD`. The public key is in
+  `tauri.conf.json`. Losing the private key means installed apps can never update again.
+- A local release build: `TAURI_SIGNING_PRIVATE_KEY="$(cat ~/.tauri/avatg.key)"
+  TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$(cat ~/.tauri/avatg.key.password)" bun run tauri build --bundles rpm`
+  (without them the updater-signature step fails).
+- Real yt-dlp checks without the GUI: build the arguments with `buildArgs` from `src/lib/presets.ts` (bun script)
+  and run yt-dlp with `ytdlp.rs`'s fixed arguments; test with a short video (e.g. "Me at the zoo", jNQXAC9IVRw).
+  On the owner's network YouTube needs `--proxy http://127.0.0.1:10809` (their VPN proxy).
 
-### Known issues
-- **Blank window in `tauri dev`** on the owner's machine came from the webview not reaching the Vite dev server
-  while a VPN/system proxy app was running (turning it off fixed it). Vite is pinned to 127.0.0.1 and WebKitGTK's
-  DMA-BUF renderer is off on Linux (`main.rs`). Release builds load the frontend from inside the app, so they don't
-  depend on the dev server.
-- **Glass blur** (`blur.rs`): works on the owner's KDE Plasma 6.8 (Wayland) through the standard
-  `ext_background_effect_v1` protocol; KWin before 6.8 uses `org_kde_kwin_blur`. Windows (acrylic) and macOS
-  (vibrancy) use `window-vibrancy` but are untested. The blur is asked for when the page first calls `window_blur`
-  (the window must be on screen); without blur the window stays at most 12% see-through, with blur 40%.
-  X11 sessions get no blur yet (`_KDE_NET_WM_BLUR_BEHIND_REGION` would add it).
+## Architecture
 
-- In the app (owner, 2026-11-14): downloads work end to end; the repaint glitch (parts of the window disappearing
-  on click) went away after dropping the `WEBKIT_DISABLE_DMABUF_RENDERER` override.
+- **Rust** (`src-tauri/src`) only runs processes and manages files and storage. Errors are `String`s.
+  `ytdlp.rs` (runs yt-dlp, progress lines `TGP|`/`TGPP|`/`TGF|`), `tools.rs` (install/version tools, system copies,
+  chosen paths), `db.rs` (SQLite `<app data>/avatg.db`: one JSON recipe per download, settings key/value),
+  `files.rs` (per-download working folders, delete files, description `.txt`), `proxy.rs` (proxy setting, desktop
+  proxy), `blur.rs` (glass blur), `tray.rs` (tray, close to tray), `updater.rs` (self-update), `themes.rs`
+  (imported theme files), `lib.rs` (plugins, setup, command list).
+- **Frontend** (`src`): `ipc.ts` mirrors every Rust command and event (typed by hand; keep in sync).
+  `lib/` is pure logic with tests: `presets.ts` (preset → yt-dlp args, the only place for format logic),
+  `youtube.ts` (links and yt-dlp JSON), `links.ts`, `format.ts`, `toolVersions.ts`, `themes.ts`.
+  `features/{downloads,picker,settings,appearance,tools,updates}` each hold a Zustand store, views and a CSS module.
+  `components/` holds window chrome (`layout.tsx`, `ResizeGrips`, `WindowControls`, `DropOverlay`, `Toasts`) and
+  `components/ui` the shared controls. `styles/tokens.css` holds the design tokens (colours overwritten at runtime by
+  the theme). Built-in themes: `src/themes/*.theme.json`.
+- The download queue runs in the frontend (`features/downloads/store.ts`); the webview keeps running while the window
+  is hidden in the tray. The yt-dlp command is built from the recipe each time a download starts, so waiting,
+  paused and retried downloads use the current settings.
+- Not used, on purpose: shadcn/Tailwind (CSS Modules + tokens cover it), tauri-specta (release candidate), a router.
 
-- File names are `Title.ext` (`001 - Title.ext` in numbered playlists), no `[id]`. Unfinished files live in a
-  per-download working folder `<download folder>/.avatg-parts/<download id>/` (`--paths temp:`); Cancel,
-  Remove and finishing delete it. Checked with a real download. Two different videos with the same title in one
-  folder now share a file name, and yt-dlp skips the second as already downloaded (rare; could add a suffix).
+## Verified
 
-### Not verified yet (do next)
-1. FFmpeg install through the proxy; tool sources (system / custom) once built.
-2. In the app: Pause then Resume continuing from the `.part` file, Cancel deleting the partial files, Pause all
-   holding waiting downloads.
-3. Channel tabs and playlist expansion against real channels.
-4. Tray: menu actions, tooltip, close to tray, `--minimized` login launch; single instance.
-5. Drag and drop from Firefox and Chrome (`dragDropEnabled: false` in tauri.conf.json).
-6. Windows and macOS builds (glass needs `window-vibrancy` there; not added yet).
+- Real downloads with the app's exact arguments (yt-dlp 2026.10.26, through the owner's proxy): 1080p MP4 (H.264
+  preferred), Best MKV, MP3, M4A; subtitles embedded only / separate / both; description file; plain file names
+  with the per-download working folder. Post-processor keys: `Merger`, `Metadata`, `EmbedThumbnail`, `ExtractAudio`,
+  `EmbedSubtitle`, `SubtitlesConvertor`, `FixupM4a`, `MoveFiles` (no `FFmpeg` prefix).
+- Owner, in the app: downloads end to end; resizing; Cancel/Esc on the playlist page; scrolling dialogs;
+  Pause/Resume and downloads-at-a-time applying at once; blur in dev and in the release RPM; system yt-dlp
+  (`~/.local/bin`) and FFmpeg (`/usr/bin`) picked up automatically; the Cherry dark theme ("looks good").
+- `v0.1.0` release run: Windows NSIS, macOS arm64 + x64 dmg, Linux deb/rpm/AppImage, `latest.json` with all
+  platform entries, `.sig` files, SHA256SUMS. About 9 minutes (Rust compiles everything; owner declined speed-ups).
 
-## UI redesign (in planning)
+## Not built yet (carried over from AvaDM, owner wants these eventually)
 
-The look and structure follow AvaDM (`/data/projects/AvaDM/docs/DESIGN.md`, canvas "AvaDM main window").
-The mockups live in the Claude design canvas "AvaTG main window":
-https://claude.ai/artifact/QkT75qvfYzuqEXLTHNdXEo
+- Rolling log files with "Open log folder", and a crash report that opens a prefilled GitHub issue.
+- Tray menu listing running downloads with Pause/Resume (the tray has Open, Pause all, Add link from clipboard, Quit).
+- Middle truncation of long titles (now: end ellipsis) and full-text tooltips on everything truncated.
+- Column header menu (show/hide, reorder, resize columns) and persisted sort/filter.
+- Pause/Cancel while an AvaTG update downloads (Tauri's updater downloads in one go).
+- Blur on X11 sessions (`_KDE_NET_WM_BLUR_BEHIND_REGION`); Windows/macOS blur is written but untested.
+- A suffix for two different videos with the same title in one folder (yt-dlp now skips the second).
 
+## Not verified yet
 
-### Small features to carry over from AvaDM (owner: keep them)
-Collected from AvaDM's git history and CHANGELOG. Each needs a AvaTG equivalent:
-- **Adding links**: clipboard button in the top bar; **Ctrl+V anywhere on the list** (no text field focused, no
-  dialog open) adds the clipboard's links; **drag and drop** of links or text with links onto the window, with a
-  full-window overlay ("Drop to add", "N links found", amber "No link found in this item"). Read every drag format:
-  `text/uri-list`, `text/plain` and `text/html` (Firefox multi-selected links only arrive as HTML). One link opens
-  the video dialog; several links open a picker list like a playlist. Nothing starts without a confirmation.
-  Tauri note (to verify): browser link drags need the window's native file-drop handling off (`dragDropEnabled: false`)
-  so the webview gets HTML5 drag events.
-- **List**: click / Ctrl / Shift multi-select, tri-state select-all, the bulk toolbar; hover row actions; row
-  right-click menu (Play, Show in folder, Open on YouTube, Copy video link, Download again…, Remove, Delete files…);
-  Status filter and Sort with counts; middle truncation of long titles; tooltips that show the full text of anything
-  truncated; persisted sort/filter.
-- **Keyboard**: Ctrl K search, Esc clears the selection and cancels dialogs, Delete removes, Enter / Ctrl+Enter confirms.
-- **Remove vs Delete files**: separate actions and confirmations (Remove keeps the files).
-- **Double-click a finished download**: setting (Play / Show in folder).
-- **Interrupted downloads**: an "N interrupted · Resume all" chip after a restart, plus the "Resume unfinished downloads"
-  setting.
-- **App shell**: single instance (a second launch shows the running window; `tauri-plugin-single-instance`);
-  tray menu with running downloads and Pause/Resume; in-app toasts for errors; rolling log files with "Open log folder";
-  crash report that opens a prefilled GitHub issue; update-available toast and self-update (Tauri updater plugin);
-  a minimum window size; settings apply immediately with inline validation (no Save button).
+- Tray: menu actions, tooltip, `--minimized` login launch; single instance.
+- Drag and drop from Firefox and Chrome (`dragDropEnabled: false`), and dropping a theme `.json`.
+- Channel tabs and channel playlist expansion against big real channels.
+- Pre-release tags: the RPM build may reject versions with `-` (e.g. `0.2.0-rc.1`).
+- Theme import from Settings, theme removal, the contrast warning, in the real app.
+
+## Known issues and gotchas
+
+- **Blank dev window behind a proxy.** A desktop-wide proxy without a localhost exception (KDE proxy settings +
+  the owner's VPN proxy app) sent the webview's dev-server requests to the proxy. Fixed for dev builds by
+  `GIO_USE_PROXY_RESOLVER=dummy` (`main.rs`, debug + Linux only) and Vite pinned to 127.0.0.1. Release builds load
+  the frontend from inside the app.
+- **Do not set `WEBKIT_DISABLE_DMABUF_RENDERER`.** It was tried and caused parts of the window to stop repainting.
+- **Blur timing.** The window needs a native surface first, so `blur.rs` applies the blur after the window is
+  shown (retrying) and sends `window-blur`; asking from the page at startup was too early in release builds.
+  KWin 6.8 offers only `ext_background_effect_v1` (not `org_kde_kwin_blur`); both are supported.
+- **Canvas page saves stray pastes.** Twice a stray paragraph (a pasted URL / text) appeared in a board after the
+  owner had the canvas open. The owner did not add them; when a publish is refused, diff the page's copy and drop
+  such lines.
+- `dnf install` of a rebuilt RPM with the same version needs `dnf reinstall`.
+- The owner's old `tubegrab` RPM may still be installed (`pkexec dnf remove -y tubegrab`); its data was moved to
+  `~/.local/share/com.mparnian.tubegrab.bak-dev` for the fresh-install test.
 
 ## Decisions (owner)
-- Stack: Tauri 2 + React/TS.
-- Tools are downloaded on first run into app data and updated from Settings → Tools. They are not bundled.
-- Project name: avatg.
-- Package manager: **bun** (2026-11-14). `bun.lock`, `bun run dev/build` in `tauri.conf.json`.
-- UI (2026-11-14):
-  - AvaDM's **Dark glass** look only. No Frost/light theme. Keep the glass (transparency) effect with a strength
-    setting if Tauri can do it, with a solid fallback.
-  - Settings mirror AvaDM's settings pages. Keep only the options yt-dlp (or the app) can really do; drop the rest.
-  - **Tray app like AvaDM**: closing hides to the tray, downloads keep running in the background, launch at login
-    (starts in the tray). **No scheduler or queues in v1.**
-  - Subtitles: offered per download, including **auto-generated captions**. A setting chooses embedded, separate
-    files, or both.
-  - Description: an option to save it as a **`.txt` file next to the video**.
-  - Speed limit: **per download** only (`--limit-rate`); yt-dlp has no shared total limit.
-  - Settings pages: General (with the glass slider as a row, no Appearance page), Downloads, Files, Tools, Storage,
-    About & updates. Defaults: **1 download at a time**, 4 parts per download, 10 retries, 20 s stall timeout,
-    3 automatic resumes, description file off.
-  - Pause all / Resume all (also to be added to AvaDM later): a status-bar chip and a tray menu item. Pause all
-    pauses running downloads and **holds waiting ones: nothing new starts until Resume all**. Resume all also resumes
-    interrupted downloads.
-- Tools (2026-11-14): FFmpeg is **not bundled**. Each tool (yt-dlp, Deno, FFmpeg) can come from AvaTG's own
-  downloaded copy, a copy installed on the system (found automatically), or a custom file the user picks. A version
-  map decides what is accepted (Deno ≥ 2.3, FFmpeg ≥ 5, yt-dlp warned when older than ~90 days); the downloaded copy
-  is the fallback.
-- Proxy (2026-11-14): YouTube is unreachable on the owner's network without a proxy. Settings > Downloads > Network:
-  use the system proxy (default; KDE, GNOME, Windows, macOS settings or proxy environment variables), a custom proxy
-  URL (http, https, socks5), or none. Used by yt-dlp (`--proxy`) and by the tools download.
-- Window glass (2026-11-14): real blur like AvaDM. Windows/macOS via `window-vibrancy`; KDE via KWin's
-  `org_kde_kwin_blur` Wayland protocol (native Wayland, X11 property as fallback); solid fallback elsewhere.
-- Brand and themes (2026-11-15, built; `src/lib/themes.ts`, `src/themes/`, `features/appearance`, `themes.rs`): the app is renamed **AvaTG**. Logo = AvaDM's
-  mark recoloured to cherry (`#B0153A`). New default theme **Cherry dark** (accent `#EF4765`, dark text on it);
-  **Dark glass** stays as a built-in theme. Theming like AvaDM: one JSON file of colour tokens per theme in AvaDM's
-  format (`#AARRGGBB`, so AvaDM themes import as they are), built-ins inside the app, imported ones in a themes
-  folder, theme cards plus "Import theme…" in Settings › Appearance (which comes back, with the glass slider).
-- Download records (2026-11-14): keep one **"recipe" per download in SQLite** (link, format choice, folder, status),
-  like AvaDM. yt-dlp's own `.part` files do the byte-level resuming; Resume re-runs the same command. No AvaDM-style
-  working files.
+
+Ask the owner before inventing new UI rules; record answers here.
+
+- **Stack**: Tauri 2 + React/TS, **bun** as the package manager.
+- **Name and brand** (2026-11-15): **AvaTG**, identifier `org.avadm.avatg`, repo AvaDM-org/AvaTG. Logo = AvaDM's
+  mark recoloured to cherry `#B0153A` (`assets/avatg-logo-1024.png`; icons generated with `bun run tauri icon`).
+- **Look**: AvaDM's design system (`/data/projects/AvaDM/docs/DESIGN.md`). Default theme **Cherry dark** (accent
+  `#EF4765` with dark text; Failed stays soft red, owner said keep it). **Dark glass** is a built-in theme too.
+  No light theme.
+- **Themes**: AvaDM's JSON format (`#AARRGGBB`, AvaDM themes import as they are), missing tokens fall back to Dark
+  glass, imported files in `<app data>/themes`, import from Settings › Appearance or by dropping a `.json`.
+- **Glass**: real blur like AvaDM (see gotchas). A strength slider in Settings › Appearance; without blur the window
+  stays at least 88% opaque.
+- **Tray app like AvaDM**: closing hides to the tray, downloads continue, launch at login starts in the tray.
+  **No scheduler or queues in v1.**
+- **Settings pages**: General, Appearance, Downloads, Files, Tools, Storage, About & updates. Apply immediately.
+  Defaults: **1 download at a time**, 4 parts per download, 10 retries, 20 s stall timeout, 3 automatic resumes,
+  description file off, proxy "System".
+- **Downloads**: one recipe per download in SQLite; yt-dlp's `.part` files resume. File names `Title.ext` (no id).
+  Speed limit per download only. Running downloads keep their settings until paused and resumed.
+- **Pause all / Resume all**: status-bar chip and tray item. Pause all pauses running downloads and **holds waiting
+  ones: nothing starts until Resume all**. (Owner wants this in AvaDM too, later.)
+- **Subtitles** offered per download, including auto-generated captions; a setting picks embedded / separate /
+  both. **Description** can be saved as a `.txt` next to the video.
+- **Tools**: not bundled (not even FFmpeg). Each tool can be the system copy (auto-detected), AvaTG's downloaded
+  copy, or a custom file; version rules Deno ≥ 2.3, FFmpeg ≥ 5, yt-dlp warned after ~90 days. Each tool links its
+  official GitHub page. Deno's cache lives in AvaTG's data folder (`DENO_DIR`).
+- **Proxy**: System (KDE, GNOME, Windows, macOS, env vars) / Custom URL / None; used by yt-dlp, tool downloads and
+  the updater. Needed on the owner's network.
+- **Updates like AvaDM**: tag → draft release → owner publishes. Check on launch, "Update now" notice, include
+  pre-releases switch. Windows, macOS and AppImage update themselves; `.deb`/`.rpm` open the release page. Signed.
+- **Release builds**: Windows NSIS, macOS arm64 + x64, Linux deb + rpm + AppImage. Owner declined build speed-ups.
 
 ## Claude Code setup for this repo
-- Official plugins (project scope, `.claude/settings.json`): `rust-analyzer-lsp`, `typescript-lsp`
-  (needs `typescript-language-server` on PATH; installed with `bun add -g typescript-language-server typescript`),
-  `code-simplifier`.
-- Skills in `.claude/skills/`: Vercel's `react-best-practices` and `composition-patterns` (vercel-labs/agent-skills,
-  MIT). Their Next.js/server rules do not apply to this app. There is no official Tauri skill.
+
+- Official plugins (project scope, `.claude/settings.json`): `rust-analyzer-lsp`, `typescript-lsp` (needs
+  `typescript-language-server` on PATH: `bun add -g typescript-language-server typescript`), `code-simplifier`.
+- Skills in `.claude/skills/`: Vercel's `react-best-practices` and `composition-patterns` (MIT). Their Next.js/server
+  rules do not apply. There is no official Tauri skill.
+- Linux build packages (Fedora): `webkit2gtk4.1-devel libappindicator-gtk3-devel librsvg2-devel libxdo-devel`.
