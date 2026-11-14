@@ -2,43 +2,34 @@
 
 ## Status (2026-11-14)
 
-The first full implementation is written but has **never been compiled or run**. This machine (Fedora) now has
-Rust 1.98.1 and rust-analyzer, so the Rust side can be built here. A UI redesign is being planned (see "UI redesign"
-below) before more code is written.
+**The redesigned app builds and runs on Linux (Fedora 44, KDE Wayland).** `bun run tauri dev` starts it; the
+first launch shows the one-time tools setup. `bun run check` (tsc, eslint, vitest, rustfmt, clippy -D warnings,
+cargo test) passes.
+
+### Architecture (approved 2026-11-14)
+- Rust (`src-tauri/src`): `ytdlp.rs` runs yt-dlp, `tools.rs` installs the tools, `db.rs` stores download recipes and
+  settings in SQLite (`<app data>/tubegrab.db`, JSON document per download), `files.rs` deletes partial files and
+  renames the description to `.txt`, `tray.rs` is the tray menu and close-to-tray. Errors are `String`s.
+- Frontend (`src`): `ipc.ts` is every command and event; `lib/` is pure logic with tests (presets → yt-dlp args,
+  link parsing, formatting, yt-dlp JSON); `features/{downloads,picker,settings,tools}` hold each feature's store,
+  views and CSS module; `components/ui` holds the shared controls; `styles/tokens.css` is AvaDM's Dark glass.
+- State: Zustand. The download queue lives in the frontend (the webview keeps running while the window is hidden).
+- Not used, on purpose: shadcn/Tailwind (CSS Modules plus the AvaDM tokens cover it), tauri-specta (still a
+  release candidate; `ipc.ts` is the single hand-typed mirror), a router.
 
 ### Verified
-- `npx tsc --noEmit` passes and `npx vite build` succeeds (frontend only).
-- Every tool download URL and asset name was checked against the live release pages on 2026-11-14
-  (yt-dlp 2026.10.26, Deno v2.9.8, yt-dlp/FFmpeg-Builds `latest`, martin-riedl.de scripting URLs). The table is in README.
-- The yt-dlp JS runtime requirements come from the yt-dlp wiki "EJS" page (Deno is the default, minimum 2.3.0).
+- Builds, lints, tests; the app window opens and creates its database.
+- Tool download URLs (README table, 2026-11-14).
 
-### Not verified (do these first)
-1. **Rust compiles.** `src-tauri/src/tools.rs` and `process.rs` were written against reqwest 0.12, zip 2,
-   tokio 1 and tauri-plugin-dialog 2 without a compiler. Expect a few small fixes.
-2. The tool installer works on each OS (the setup screen's **Download tools** button).
-3. yt-dlp argument sets. Run one download per quick preset and check:
-   - The progress template lines `TGP|…`, `TGPP|…` and `--print after_move:TGF|%(filepath)s` come back on stdout
-     with `--quiet --progress --newline --no-simulate`.
-   - `-S res:H,ext:mp4:m4a` + `--merge-output-format mp4` gives an MP4 at ≤H.
-   - Audio: `-f ba/b -x --audio-format mp3 --audio-quality 0`.
-4. Channel view: `<base>/videos`, `/shorts` and `/playlists` with `--flat-playlist` return entries. Check that
-   `toEntry` in `src/lib/youtube.ts` detects playlist entries (`ie_key === "YoutubeTab"` or `list=` in the URL).
-5. Cancel kills yt-dlp and its ffmpeg child (Windows uses `taskkill /T /F`).
-6. The capability permissions in `src-tauri/capabilities/default.json` (`opener:allow-open-path` with a `**` scope,
-   `dialog:default`) are accepted by the Tauri build.
-
-## Next up
-On the other machine (with Rust installed via rustup, plus the Tauri prerequisites):
-
-```bash
-cd tubegrab && bun install && bun run tauri dev
-```
-
-Fix any compile errors in `src-tauri/src/*.rs`, then work through the "Not verified" list above. After that:
-- Add a GitHub Actions release workflow (`tauri-apps/tauri-action`, matrix: windows-latest, macos-latest
-  for aarch64 and x86_64, ubuntu-22.04).
-- Replace the template icons: `bun run tauri icon path/to/icon.png`.
-- Optional: the Tauri updater plugin for the app itself (tools already update on their own).
+### Not verified yet (do next)
+1. Tools install from the setup screen (real download).
+2. Real downloads for each quick preset, including: subtitles in all three modes and auto captions (the
+   `--compat-options no-keep-subs` trick for embed-only), description renamed to `.txt`, Pause then Resume
+   continuing from the `.part` file, Cancel deleting the partial files, Pause all holding waiting downloads.
+3. Channel tabs and playlist expansion against real channels.
+4. Tray: menu actions, tooltip, close to tray, `--minimized` login launch; single instance.
+5. Drag and drop from Firefox and Chrome (`dragDropEnabled: false` in tauri.conf.json).
+6. Windows and macOS builds (glass needs `window-vibrancy` there; not added yet).
 
 ## UI redesign (in planning)
 
@@ -46,7 +37,6 @@ The look and structure follow AvaDM (`/data/projects/AvaDM/docs/DESIGN.md`, canv
 The mockups live in the Claude design canvas "TubeGrab main window":
 https://claude.ai/artifact/QkT75qvfYzuqEXLTHNdXEo
 
-Open: the code architecture and coding standards (proposal made, not yet approved).
 
 ### Small features to carry over from AvaDM (owner: keep them)
 Collected from AvaDM's git history and CHANGELOG. Each needs a TubeGrab equivalent:
@@ -89,7 +79,9 @@ Collected from AvaDM's git history and CHANGELOG. Each needs a TubeGrab equivale
   - Settings pages: General (with the glass slider as a row, no Appearance page), Downloads, Files, Tools, Storage,
     About & updates. Defaults: **1 download at a time**, 4 parts per download, 10 retries, 20 s stall timeout,
     3 automatic resumes, description file off.
-  - Pause all / Resume all: wanted (also to be added to AvaDM later). Placement proposed on the canvas, not decided.
+  - Pause all / Resume all (also to be added to AvaDM later): a status-bar chip and a tray menu item. Pause all
+    pauses running downloads and **holds waiting ones: nothing new starts until Resume all**. Resume all also resumes
+    interrupted downloads.
 - Download records (2026-11-14): keep one **"recipe" per download in SQLite** (link, format choice, folder, status),
   like AvaDM. yt-dlp's own `.part` files do the byte-level resuming; Resume re-runs the same command. No AvaDM-style
   working files.
