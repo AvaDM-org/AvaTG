@@ -15,6 +15,7 @@ import { usePicker } from "../picker/store";
 import { useSettings, type DownloadsView } from "../settings/store";
 import { RowActions } from "./cells";
 import { columnLabel, DOWNLOAD_COLUMNS } from "./columns";
+import { DownloadDetails } from "./DownloadDetails";
 import { DownloadsStatusBar } from "./DownloadsStatusBar";
 import { playFile, showInFolder } from "./fileActions";
 import { RowMenu, type Ask } from "./RowMenu";
@@ -33,6 +34,7 @@ export function DownloadsPage({
   const { items, live, held, pause, resume, cancel, remove } = useDownloads();
   const doubleClick = useSettings((st) => st.settings.doubleClick);
   const view = useSettings((st) => st.settings.downloadsView);
+  const detailPanel = useSettings((st) => st.settings.detailPanel);
   const setSetting = useSettings((st) => st.set);
   const setView = useCallback(
     (patch: Partial<DownloadsView>) => setSetting("downloadsView", { ...view, ...patch }),
@@ -318,7 +320,16 @@ export function DownloadsPage({
         }
       />
 
+      {detailPanel && selectedItems.length > 0 && (
+        <DownloadDetails items={selectedItems} onAsk={setAsk} onClose={() => setSetting("detailPanel", false)} />
+      )}
+
       <DownloadsStatusBar
+        details={
+          selectedItems.length > 0
+            ? { open: detailPanel, toggle: () => setSetting("detailPanel", !detailPanel) }
+            : undefined
+        }
         selectedCount={selectedItems.length}
         visibleCount={visible.length}
         filtered={view.status !== "all" || view.type !== "all" || !!query}
@@ -331,6 +342,7 @@ export function DownloadsPage({
           onClose={() => setMenu(null)}
           onAsk={setAsk}
           onDownloadAgain={(d) => void openPicker([d.url])}
+          onShowDetails={detailPanel ? undefined : () => setSetting("detailPanel", true)}
         />
       )}
 

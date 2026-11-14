@@ -40,7 +40,7 @@ reopened; columns **reorder, resize and hide like Dolphin/Explorer**.
 | 5 | Type filter (All / Video / Audio, live counts) and new columns: Added, Channel, Duration, Took, Avg speed, Folder | done |
 | 6 | History stats: started/finished time, time running and time transferring summed across resumes; "Took" and "Average speed"; the real file size once finished | done |
 | 7 | yt-dlp output per download (warnings no longer hidden): a log kept in memory, WARNING lines as toasts (once per message) | done |
-| 8 | Detail panel: General / Format / Log tabs, action column, selection summary for several rows | todo |
+| 8 | Detail panel: General / Format / Log tabs, action column, selection summary for several rows | done |
 | 9 | "N interrupted · Resume" status-bar chip | todo |
 | 10 | Import links from a file (Add link › Import list: From clipboard / From file…), dropping `.list/.lst/.url` too | todo |
 | 11 | Free disk space under Save to (one shared folder field for the video dialog and the playlist page) | todo |

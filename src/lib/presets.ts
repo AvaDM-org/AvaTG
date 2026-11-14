@@ -155,3 +155,33 @@ export function buildArgs(p: Preset, out: OutputOptions, o: DownloadOptions): st
   a.push("-o", `${folder}${prefix}%(title)s.%(ext)s`);
   return a;
 }
+
+const SUBTITLE_MODES: Record<SubtitleMode, string> = {
+  embed: "inside the file",
+  separate: "as .srt files",
+  both: "inside the file and as .srt",
+};
+
+/** The preset in words, one row per choice, for the detail panel. Subtitles follow the current settings. */
+export function describePreset(
+  p: Preset,
+  o: Pick<DownloadOptions, "subtitleMode" | "autoCaptions">,
+): [string, string][] {
+  const yesNo = (b: boolean) => (b ? "Yes" : "No");
+  const rows: [string, string][] = [];
+  if (p.mode === "audio") {
+    rows.push(["Type", "Audio only"]);
+    rows.push(["Audio", formatLabel(p).replace(" · ", ", ")]);
+  } else {
+    rows.push(["Type", p.mode === "av" ? "Video and audio" : "Video only"]);
+    rows.push(["Quality", p.maxHeight ? `Up to ${p.maxHeight}p` : "Best available"]);
+    rows.push(["Container", p.container.toUpperCase()]);
+    const subs = p.subtitles ? `${p.subLangs.join(", ") || "Any"}, ${SUBTITLE_MODES[o.subtitleMode]}` : "No";
+    rows.push(["Subtitles", p.subtitles && o.autoCaptions ? `${subs} (auto captions too)` : subs]);
+  }
+  rows.push(["Thumbnail", yesNo(p.thumbnail)]);
+  rows.push(["Chapters and info", yesNo(p.chapters)]);
+  rows.push(["Remove sponsors", yesNo(p.sponsorBlock)]);
+  rows.push(["Description file", yesNo(p.description)]);
+  return rows;
+}

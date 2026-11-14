@@ -1,0 +1,141 @@
+/* The download detail panel: thumbnail, facts and actions (General), the preset (Format), yt-dlp's output (Log). */
+
+.general {
+  height: 100%;
+  display: flex;
+  gap: 18px;
+}
+.thumb {
+  width: 128px;
+  height: 72px;
+  flex-shrink: 0;
+  display: grid;
+  place-content: center;
+  border-radius: var(--r-md);
+  background: var(--surface) center / cover no-repeat;
+  box-shadow: inset 0 0 0 1px var(--hair);
+  color: var(--fg2);
+}
+.info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.title {
+  font-size: var(--fs-name);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.path {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-top: -6px;
+  font-size: var(--fs-path);
+  color: var(--fg3);
+}
+.path > span {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.path small {
+  font: inherit;
+  white-space: nowrap;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px 16px;
+}
+.error {
+  grid-column: 1 / -2;
+  color: var(--bad);
+  font-size: var(--fs-small);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 64px;
+  overflow: auto;
+  user-select: text;
+}
+.actions {
+  width: 168px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.actions > button {
+  justify-content: flex-start;
+}
+
+.format {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px 16px;
+}
+.link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.link > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: text;
+}
+
+.logWrap {
+  position: relative;
+  height: 100%;
+}
+.log {
+  height: 100%;
+  overflow: auto;
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  background: var(--field);
+  font-family: var(--font-mono);
+  font-size: var(--fs-path);
+  line-height: 1.5;
+  color: var(--fg2);
+  user-select: text;
+}
+.log > div {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.log > div > span {
+  margin-right: 10px;
+  color: var(--fg3);
+}
+.log > div[data-level="warning"] {
+  color: var(--warn);
+}
+.log > div[data-level="error"] {
+  color: var(--bad);
+}
+.logCopy {
+  position: absolute;
+  top: 6px;
+  right: 18px;
+}
+.logEmpty {
+  color: var(--fg3);
+  font-size: var(--fs-small);
+}
+.logError {
+  margin: 8px 0 0;
+  color: var(--bad);
+  white-space: pre-wrap;
+  font-size: var(--fs-path);
+  user-select: text;
+}

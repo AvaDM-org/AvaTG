@@ -56,6 +56,8 @@ interface DownloadsStore {
 }
 
 const stopping = new Map<string, StopReason>();
+/** load() can be called twice (React's StrictMode in dev); it must only run once. */
+let loading: Promise<void> | null = null;
 const clocks = new Map<string, RunClock>();
 const EMPTY_LIVE: LiveProgress = { speed: null, eta: null, phase: null, part: 0 };
 
@@ -165,19 +167,7 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
     held: false,
     loaded: false,
 
-    load: async () => {
-      const resume = getSettings().resumeOnLaunch;
-      // Whatever was running or waiting when AvaTG closed is "interrupted", or simply queued again.
-      const items = (await loadDownloads<DownloadRecord>()).map((d) =>
-        d.status === "running" || d.status === "queued"
-          ? { ...d, status: resume ? ("queued" as const) : ("interrupted" as const) }
-          : d,
-      );
-      set({ items, loaded: true });
-      void saveDownloads(items);
-      onDownloadEvent(handleEvent);
-      pump();
-    },
+    load: () => (loading ??= loadOnce()),
 
     add: (records) => {
       set((st) => ({ items: [...st.items, ...records] }));
@@ -261,6 +251,20 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
       );
     },
   };
+
+  async function loadOnce() {
+    const resume = getSettings().resumeOnLaunch;
+    // Whatever was running or waiting when AvaTG closed is "interrupted", or simply queued again.
+    const items = (await loadDownloads<DownloadRecord>()).map((d) =>
+      d.status === "running" || d.status === "queued"
+        ? { ...d, status: resume ? ("queued" as const) : ("interrupted" as const) }
+        : d,
+    );
+    set({ items, loaded: true });
+    void saveDownloads(items);
+    void onDownloadEvent(handleEvent);
+    pump();
+  }
 
   function handleEvent(ev: DownloadEvent) {
     const d = find(ev.id);

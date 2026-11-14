@@ -48,6 +48,8 @@ export interface Settings {
   preset: Preset;
   /** the downloads list as the user left it: columns, sort and filters (the search is not kept) */
   downloadsView: DownloadsView;
+  /** the detail panel under the list opens on selection; closing it turns this off until it is reopened */
+  detailPanel: boolean;
 }
 
 export interface DownloadsView {
@@ -89,6 +91,7 @@ export const DEFAULTS: Settings = {
     ffmpeg: { source: "auto", customPath: "" },
   },
   preset: DEFAULT_PRESET,
+  detailPanel: true,
   downloadsView: { columns: null, sort: { column: "added", desc: true }, status: "all", type: "all" },
 };
 

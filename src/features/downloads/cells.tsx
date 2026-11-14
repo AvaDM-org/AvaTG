@@ -1,6 +1,6 @@
-// The downloads list's cells: name, status and the row's hover actions.
+// The downloads list's cells (name, status), and the actions for a download in each state.
 import { IconButton, ProgressBar } from "../../components/ui/controls";
-import { Icon } from "../../components/ui/Icon";
+import { Icon, type IconName } from "../../components/ui/Icon";
 import { fmtDuration, fmtEta } from "../../lib/format";
 import { playFile, showInFolder } from "./fileActions";
 import { useDownloads } from "./store";
@@ -104,6 +104,38 @@ export function StatusCell({ d, live, held }: { d: DownloadRecord; live: LivePro
   }
 }
 
+export interface DownloadAction {
+  icon: IconName;
+  label: string;
+  run: () => void;
+  danger?: boolean;
+}
+
+/** What can be done with a download in its state, most useful first. Used by the row and the detail panel. */
+export function actionsFor(d: DownloadRecord, ask: { cancel: () => void; remove: () => void }): DownloadAction[] {
+  const { pause, resume } = useDownloads.getState();
+  const pauseIt = { icon: "pause", label: "Pause", run: () => pause([d.id]) } as const;
+  const resumeIt = { icon: "play", label: "Resume", run: () => resume([d.id]) } as const;
+  const cancelIt = { icon: "x", label: "Cancel download", run: ask.cancel } as const;
+  const folder = { icon: "folder", label: "Show in folder", run: () => void showInFolder(d) } as const;
+  const remove = { icon: "trash", label: "Remove from list", run: ask.remove } as const;
+  switch (d.status) {
+    case "running":
+      return [pauseIt, cancelIt, folder];
+    case "queued":
+      return [pauseIt, cancelIt];
+    case "paused":
+    case "interrupted":
+      return [resumeIt, cancelIt];
+    case "failed":
+    case "cancelled":
+      return [{ icon: "retry", label: "Try again", run: () => resume([d.id]) }, remove];
+    case "done":
+      return [{ icon: "play", label: "Play", run: () => void playFile(d) }, folder, remove];
+  }
+}
+
+/** The row's hover buttons. */
 export function RowActions({
   d,
   onAskCancel,
@@ -113,30 +145,7 @@ export function RowActions({
   onAskCancel: () => void;
   onAskRemove: () => void;
 }) {
-  const { pause, resume } = useDownloads.getState();
-  const btn = (icon: Parameters<typeof IconButton>[0]["icon"], label: string, onClick: () => void) => (
-    <IconButton key={label} icon={icon} label={label} small onClick={onClick} />
-  );
-  switch (d.status) {
-    case "running":
-      return [
-        btn("pause", "Pause", () => pause([d.id])),
-        btn("x", "Cancel download", onAskCancel),
-        btn("folder", "Show in folder", () => showInFolder(d)),
-      ];
-    case "queued":
-      return [btn("pause", "Pause", () => pause([d.id])), btn("x", "Cancel download", onAskCancel)];
-    case "paused":
-    case "interrupted":
-      return [btn("play", "Resume", () => resume([d.id])), btn("x", "Cancel download", onAskCancel)];
-    case "failed":
-    case "cancelled":
-      return [btn("retry", "Try again", () => resume([d.id])), btn("trash", "Remove from list", onAskRemove)];
-    case "done":
-      return [
-        btn("play", "Play", () => playFile(d)),
-        btn("folder", "Show in folder", () => showInFolder(d)),
-        btn("trash", "Remove from list", onAskRemove),
-      ];
-  }
+  return actionsFor(d, { cancel: onAskCancel, remove: onAskRemove }).map((a) => (
+    <IconButton key={a.label} icon={a.icon} label={a.label} small onClick={a.run} />
+  ));
 }

@@ -40,8 +40,10 @@
   --h-field: 38px;
   --h-row: 52px;
   --h-icon-sm: 28px;
+  --h-panel: 196px;
 
   --font: "Figtree Variable", "Figtree", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "DejaVu Sans Mono", monospace;
   --fs-title: 24px;
   --fs-dialog: 18px;
   --fs-name: 13.5px;

@@ -13,12 +13,15 @@ export function RowMenu({
   onClose,
   onAsk,
   onDownloadAgain,
+  onShowDetails,
 }: {
   at: Point;
   items: DownloadRecord[];
   onClose: () => void;
   onAsk: (a: Ask) => void;
   onDownloadAgain: (d: DownloadRecord) => void;
+  /** set while the detail panel is closed */
+  onShowDetails?: () => void;
 }) {
   const { pause, resume } = useDownloads.getState();
   const one = items.length === 1 ? items[0] : null;
@@ -42,6 +45,7 @@ export function RowMenu({
       {one && !["running", "queued"].includes(one.status) && (
         <MenuItem onSelect={run(() => onDownloadAgain(one))}>Download again with other options…</MenuItem>
       )}
+      {onShowDetails && <MenuItem onSelect={run(onShowDetails)}>Show details</MenuItem>}
       <MenuDivider />
       {has("running", "queued", "paused", "interrupted") && (
         <MenuItem onSelect={run(() => onAsk({ kind: "cancel", items: items.filter((d) => d.status !== "done") }))}>

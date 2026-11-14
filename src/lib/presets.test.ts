@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildArgs,
+  describePreset,
   DEFAULT_PRESET,
   formatLabel,
   matchingQuickPreset,
@@ -84,5 +85,20 @@ describe("labels", () => {
     expect(matchingQuickPreset(DEFAULT_PRESET)).toBe("1080p MP4");
     expect(matchingQuickPreset({ ...DEFAULT_PRESET, mode: "audio", audioFormat: "m4a" })).toBe("M4A audio");
     expect(matchingQuickPreset({ ...DEFAULT_PRESET, maxHeight: 480 })).toBeNull();
+  });
+});
+
+describe("describePreset", () => {
+  const o = { subtitleMode: "embed", autoCaptions: false } as const;
+  it("describes a video preset", () => {
+    const rows = Object.fromEntries(describePreset({ ...DEFAULT_PRESET, subtitles: true, subLangs: ["en", "de"] }, o));
+    expect(rows.Type).toBe("Video and audio");
+    expect(rows.Quality).toBe("Up to 1080p");
+    expect(rows.Subtitles).toBe("en, de, inside the file");
+  });
+  it("describes an audio preset without video rows", () => {
+    const rows = Object.fromEntries(describePreset({ ...DEFAULT_PRESET, mode: "audio", audioFormat: "mp3" }, o));
+    expect(rows.Audio).toBe("MP3, Best");
+    expect(rows.Quality).toBeUndefined();
   });
 });

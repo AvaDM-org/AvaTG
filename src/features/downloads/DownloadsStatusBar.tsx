@@ -10,10 +10,13 @@ import type { DownloadStatus } from "./types";
 
 /** Total speed, Pause all / Resume all, downloads at a time, counts. Also shown on the playlist page. */
 export function DownloadsStatusBar({
+  details,
   selectedCount = 0,
   visibleCount,
   filtered,
 }: {
+  /** the detail panel's switch, while something is selected */
+  details?: { open: boolean; toggle: () => void };
   selectedCount?: number;
   visibleCount?: number;
   filtered?: boolean;
@@ -86,6 +89,11 @@ export function DownloadsStatusBar({
         }
       </Dropdown>
       <div style={{ flex: 1 }} />
+      {details && (
+        <StatusChip on={details.open} onClick={details.toggle} title="Show or hide the details of the selection">
+          Details
+        </StatusChip>
+      )}
       <span>
         {selectedCount ? `${selectedCount} of ${visibleCount} selected` : filtered ? `${visibleCount} shown · ` : ""}
         {selectedCount ? "" : parts.join(" · ")}

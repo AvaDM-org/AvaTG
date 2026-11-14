@@ -61,6 +61,9 @@ function record(status: DownloadStatus, patch: Partial<DownloadRecord> = {}, pre
     filepath: done ? `${VIDEOS}/${title}.${ext}` : null,
     error: status === "failed" ? "ERROR: [youtube] demo: Video unavailable. This video is private" : null,
     autoRetries: 0,
+    ...(done
+      ? { finishedAt: Date.now() - i * 4 * HOUR, activeMs: 95_000 + i * 1000, transferMs: 80_000 + i * 1000 }
+      : {}),
   };
   return { ...base, ...patch };
 }
@@ -97,6 +100,12 @@ function fakeRun(id: string): Promise<string | null> {
   let done = 0;
   return new Promise((resolve, reject) => {
     const send = (ev: Omit<DownloadEvent, "id">) => void emit("download-progress", { id, ...ev });
+    const log = (message: string, level: DownloadEvent["level"] = "info") => send({ kind: "log", message, level });
+    log(`[youtube] Extracting URL: ${rec?.url}`);
+    log(`[info] ${id}: Downloading 1 format(s): 137+140`);
+    if (rec?.title.startsWith("Building"))
+      log("WARNING: [youtube] demo: Some formats are missing a URL (demo)", "warning");
+    log(`[download] Destination: ${rec?.dir}/${rec?.title}.f137.mp4`);
     const timer = window.setInterval(() => {
       const partTotal = part === 0 ? total * 0.9 : total * 0.1;
       done = Math.min(partTotal, done + partTotal * 0.04);
