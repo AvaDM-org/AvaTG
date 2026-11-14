@@ -1,14 +1,14 @@
 // Drag a link, text with links, or a .txt file over the window: a full-window overlay, then the picker.
 // Nothing starts without a confirmation. (The window's native file-drop is off so the webview gets these events.)
 import { useRef, useState } from "react";
-import { linksFromDataTransfer, extractLinks } from "../lib/links";
+import { LINK_LIST_EXTENSIONS, linksFromDataTransfer, parseLinkList } from "../lib/links";
 import { Icon } from "./ui/Icon";
 import { toast } from "./Toasts";
 import s from "./layout.module.css";
 
 type DropState = "links" | "none" | null;
 
-const TEXT_TYPES = ["text/uri-list", "text/plain", "text/html", "Files"]; // .txt/.html list links, .json is a theme
+const TEXT_TYPES = ["text/uri-list", "text/plain", "text/html", "Files"]; // list files hold links, .json is a theme
 
 /** `onLinks` gets the links found; `onThemeText` gets each dropped .json file (a theme to import). */
 export function useDropLinks(onLinks: (links: string[]) => void, onThemeText: (text: string) => Promise<void>) {
@@ -40,7 +40,8 @@ export function useDropLinks(onLinks: (links: string[]) => void, onThemeText: (t
       for (const f of themes) await onThemeText(await f.text());
       if (themes.length && !links.length) return;
       for (const file of files) {
-        if (/\.(txt|csv|html?)$/i.test(file.name)) links.push(...extractLinks(await file.text()));
+        const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+        if (LINK_LIST_EXTENSIONS.includes(ext)) links.push(...parseLinkList(await file.text()));
       }
       if (links.length) onLinks([...new Set(links)]);
       else toast("No link found in what was dropped");

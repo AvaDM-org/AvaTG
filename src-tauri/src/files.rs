@@ -51,6 +51,20 @@ pub fn file_sizes(paths: Vec<String>) -> Vec<Option<u64>> {
         .collect()
 }
 
+/// Lists of links bigger than this are refused (a list of 2 MB is tens of thousands of links).
+const MAX_LIST_BYTES: u64 = 2 * 1024 * 1024;
+
+/// Read a text file the user picked as a list of links. The frontend finds the links in it.
+#[tauri::command]
+pub fn read_link_list(path: String) -> Result<String, String> {
+    let size = std::fs::metadata(&path).map_err(|e| e.to_string())?.len();
+    if size > MAX_LIST_BYTES {
+        return Err("This file is too big to be a list of links".into());
+    }
+    let bytes = std::fs::read(&path).map_err(|e| e.to_string())?;
+    Ok(String::from_utf8_lossy(&bytes).into_owned())
+}
+
 /// yt-dlp writes the description as `<name>.description`; AvaTG saves it as `<name>.txt` next to the video.
 #[tauri::command]
 pub fn rename_description(video_path: String) -> Result<(), String> {

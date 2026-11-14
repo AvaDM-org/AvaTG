@@ -29,3 +29,12 @@ export function linksFromDataTransfer(dt: DataTransfer): string[] {
   const plain = dt.getData("text/plain");
   return [...new Set([...(html ? extractLinksFromHtml(html) : []), ...extractLinks(uriList), ...extractLinks(plain)])];
 }
+
+/** File types offered when importing a list of links (plain lists, Windows .url shortcuts, saved pages). */
+export const LINK_LIST_EXTENSIONS = ["txt", "list", "lst", "url", "csv", "html", "htm"];
+
+/** Links from a list file or pasted list: one or more per line; blank lines and `#` comments are skipped. */
+export function parseLinkList(text: string): string[] {
+  const lines = text.split(/\r?\n/).filter((l) => !l.trimStart().startsWith("#"));
+  return /<a\s/i.test(text) ? extractLinksFromHtml(lines.join("\n")) : extractLinks(lines.join("\n"));
+}
