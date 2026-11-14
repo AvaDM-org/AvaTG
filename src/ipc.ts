@@ -78,6 +78,10 @@ export const renameDescription = (videoPath: string) => invoke<void>("rename_des
 export const setProxy = (url: string | null) => invoke<void>("set_proxy", { url });
 export const systemProxy = () => invoke<string | null>("system_proxy");
 
+// blur.rs
+/** Whether the OS blurs what is behind the window (KWin, Windows acrylic, macOS vibrancy). */
+export const windowBlur = () => invoke<boolean>("window_blur");
+
 // tray.rs
 export const updateTray = (tooltip: string, allPaused: boolean) => invoke<void>("tray_update", { tooltip, allPaused });
 export const setCloseToTray = (enabled: boolean) => invoke<void>("set_close_to_tray", { enabled });

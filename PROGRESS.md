@@ -26,18 +26,11 @@ cargo test) passes.
   while a VPN/system proxy app was running (turning it off fixed it). Vite is pinned to 127.0.0.1 and WebKitGTK's
   DMA-BUF renderer is off on Linux (`main.rs`). Release builds load the frontend from inside the app, so they don't
   depend on the dev server.
-- **No blur behind the window on Linux.** WebKitGTK cannot ask the compositor for blur, so Linux caps transparency at
-  12%. Real blur on KDE would need KWin's `org_kde_kwin_blur` Wayland protocol (or `_KDE_NET_WM_BLUR_BEHIND_REGION`
-  on X11) called from Rust: possible later, owner to decide. Windows/macOS can use `window-vibrancy`.
-
-### Verified with real downloads (2026-11-14, yt-dlp 2026.10.26, through the owner's proxy)
-- yt-dlp's exact arguments from `presets.ts` plus `ytdlp.rs`'s fixed ones: 1080p MP4 (H.264 now preferred; it
-  picked AV1 before), Best MKV, MP3, M4A; subtitles embedded only (mov_text track, `.srt` removed), separate
-  (`.en.srt`), both; description written as `.description` (the app renames it to `.txt`).
-- Progress lines (`TGP|`, `TGPP|`, `TGF|`) parse; post-processor keys are `Merger`, `Metadata`, `EmbedThumbnail`,
-  `ExtractAudio`, `EmbedSubtitle`, `SubtitlesConvertor`, `FixupM4a`, `MoveFiles` (no `FFmpeg` prefix).
-- Tools setup installed yt-dlp and Deno; FFmpeg's download crawled at ~2 KB/s without the proxy and never finished.
-  The installer has no stall timeout and no proxy yet (both planned).
+- **Glass blur** (`blur.rs`): works on the owner's KDE Plasma 6.8 (Wayland) through the standard
+  `ext_background_effect_v1` protocol; KWin before 6.8 uses `org_kde_kwin_blur`. Windows (acrylic) and macOS
+  (vibrancy) use `window-vibrancy` but are untested. The blur is asked for when the page first calls `window_blur`
+  (the window must be on screen); without blur the window stays at most 12% see-through, with blur 40%.
+  X11 sessions get no blur yet (`_KDE_NET_WM_BLUR_BEHIND_REGION` would add it).
 
 ### Not verified yet (do next)
 1. FFmpeg install through the proxy; tool sources (system / custom) once built.

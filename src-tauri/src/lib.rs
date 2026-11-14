@@ -1,6 +1,7 @@
 //! TubeGrab's native side. Rust only runs processes and manages files and storage;
 //! download logic, presets and yt-dlp arguments live in the TypeScript frontend.
 
+mod blur;
 mod db;
 mod files;
 mod proxy;
@@ -31,6 +32,7 @@ pub fn run() {
         .manage(ytdlp::Jobs::default())
         .manage(proxy::ProxyState::default())
         .manage(tools::ToolPaths::default())
+        .manage(blur::BlurState::default())
         .manage(tray::CloseToTray(AtomicBool::new(true)))
         .setup(|app| {
             let handle = app.handle();
@@ -39,6 +41,7 @@ pub fn run() {
             if !std::env::args().any(|a| a == MINIMIZED_ARG) {
                 tray::show_main_window(handle);
             }
+
             // Debug builds open the web inspector so frontend errors are visible.
             #[cfg(debug_assertions)]
             if let Some(w) = app.get_webview_window("main") {
@@ -82,6 +85,7 @@ pub fn run() {
             tray::set_close_to_tray,
             proxy::set_proxy,
             proxy::system_proxy,
+            blur::window_blur,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

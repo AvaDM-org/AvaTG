@@ -17,7 +17,7 @@ import { systemProxy, toolsDir } from "../../ipc";
 import { ToolsSettings } from "../tools/ToolsPanel";
 import { chooseFolder } from "./chooseFolder";
 import { Row, Section } from "./rows";
-import { useSettings, type Settings } from "./store";
+import { hasBlur, useSettings, type Settings } from "./store";
 import s from "./settings.module.css";
 
 type PageId = "general" | "downloads" | "files" | "tools" | "storage" | "about";
@@ -152,7 +152,14 @@ function GeneralPage() {
             ]}
           />
         </Row>
-        <Row title="Glass effect" desc="0% is a solid window. On Linux the window is see-through but not blurred">
+        <Row
+          title="Glass effect"
+          desc={
+            hasBlur
+              ? "0% is a solid window; higher shows more of the blurred desktop"
+              : "The system does not blur behind this window, so it stays nearly solid"
+          }
+        >
           <input
             className={s.slider}
             type="range"

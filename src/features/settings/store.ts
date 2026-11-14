@@ -1,7 +1,7 @@
 // App settings. Saved to SQLite one key at a time; every change applies immediately (no Save button).
 import { downloadDir } from "@tauri-apps/api/path";
 import { create } from "zustand";
-import { loadSettings, saveSetting, setCloseToTray, setProxy, systemProxy } from "../../ipc";
+import { loadSettings, saveSetting, setCloseToTray, setProxy, systemProxy, windowBlur } from "../../ipc";
 import { DEFAULT_PRESET, type DownloadOptions, type Preset, type SubtitleMode } from "../../lib/presets";
 import type { ToolChoice, ToolId } from "../../lib/toolVersions";
 
@@ -78,20 +78,31 @@ interface SettingsStore {
 }
 
 /**
- * How see-through the window may get at 100% glass. Linux webviews get no blur behind the window, so the
- * background must stay readable without it (AvaDM DESIGN.md: glass is never required for readability).
+ * How see-through the window may get at 100% glass: the theme's full glass when the OS blurs what is behind
+ * the window, much less without blur so the window stays readable (AvaDM DESIGN.md: glass is never required).
  */
-const MAX_TRANSPARENCY = navigator.userAgent.includes("Linux") ? 0.12 : 0.4;
+let maxTransparency = 0.12;
+
+/** Whether the OS blurs behind the window; known after `load`. */
+export let hasBlur = false;
 
 /** Window background alpha: from solid (1.0) at 0% to the most see-through allowed at 100%. */
 const applyGlass = (glass: number) =>
-  document.documentElement.style.setProperty("--glass-alpha", String(1 - MAX_TRANSPARENCY * (glass / 100)));
+  document.documentElement.style.setProperty("--glass-alpha", String(1 - maxTransparency * (glass / 100)));
 
 /** Tell Rust which proxy yt-dlp and tool downloads use. */
 export async function applyProxy(s: Pick<Settings, "proxyMode" | "proxyUrl">) {
   if (s.proxyMode === "none") return setProxy("");
   if (s.proxyMode === "custom") return setProxy(s.proxyUrl.trim() || null);
   return setProxy(await systemProxy().catch(() => null));
+}
+
+/** Ask (again) whether the OS blurs behind the window; a window that started hidden in the tray has no answer yet. */
+export async function refreshBlur() {
+  if (hasBlur) return;
+  hasBlur = await windowBlur().catch(() => false);
+  maxTransparency = hasBlur ? 0.4 : 0.12;
+  applyGlass(useSettings.getState().settings.glass);
 }
 
 function applySideEffects<K extends keyof Settings>(key: K, value: Settings[K], all: Settings) {
@@ -111,7 +122,7 @@ export const useSettings = create<SettingsStore>((set, get) => ({
       settings.outputDir = await downloadDir().catch(() => "");
     }
     set({ settings, loaded: true });
-    applyGlass(settings.glass);
+    await refreshBlur();
     void setCloseToTray(settings.closeToTray);
     await applyProxy(settings);
   },
