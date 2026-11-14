@@ -125,7 +125,7 @@
 .dropFrame[data-none] .dropIcon {
   border-color: var(--warn);
   color: var(--warn);
-  background: rgb(240 180 90 / 0.12);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
 }
 .dropFrame h2 {
   margin: 0;

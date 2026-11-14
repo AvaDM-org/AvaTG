@@ -1,0 +1,107 @@
+/* Theme cards (AvaDM DESIGN.md: 236 wide, 8 padding, 128 px live preview, radius 16, accent ring when selected). */
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.cardWrap {
+  position: relative;
+}
+.card {
+  width: 236px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: var(--r-2xl);
+  border: 1px solid var(--hair);
+  background: var(--surface);
+  text-align: left;
+}
+.card:hover {
+  border-color: var(--line);
+}
+.card[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.preview {
+  height: 128px;
+  padding: 12px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.previewWindow {
+  height: 104px;
+  border-radius: var(--r-sm);
+  border: 1px solid;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  overflow: hidden;
+}
+.previewBar {
+  height: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+}
+.previewBar span {
+  width: 38px;
+  height: 5px;
+  border-radius: 3px;
+}
+.previewBar i {
+  margin-left: auto;
+  width: 22px;
+  height: 8px;
+  border-radius: 3px;
+}
+.previewRow {
+  height: 12px;
+  margin: 0 6px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+.previewRow span {
+  width: 50%;
+  height: 3px;
+  border-radius: 2px;
+}
+.importBox {
+  height: 128px;
+  border-radius: var(--r-md);
+  border: 1.5px dashed var(--line-strong);
+  display: grid;
+  place-content: center;
+  color: var(--fg2);
+}
+.cardName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px 4px;
+}
+.cardName span {
+  flex: 1;
+  font-size: var(--fs-name);
+  font-weight: 600;
+}
+.cardName small {
+  font-size: var(--fs-path);
+  color: var(--fg3);
+}
+.remove {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: var(--menu);
+}
+.warning {
+  margin: 10px 4px 0;
+  font-size: var(--fs-help);
+  color: var(--warn);
+}

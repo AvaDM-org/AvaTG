@@ -1,30 +1,29 @@
-/* AvaDM "Dark glass" tokens (see AvaDM docs/DESIGN.md section 3). The only theme.
+/* Design tokens. Colours are set at runtime from the chosen theme (src/lib/themes.ts, src/themes/*.theme.json);
+   the values here are Cherry dark, the default, so the first frame already looks right.
    Views use these variables; no raw colors, sizes or radii in components. */
 :root {
-  /* --glass-alpha is set from Settings > General > Glass effect; this default only shows before settings load. */
-  --glass-alpha: 0.92;
-  --glass: rgb(16 21 28 / var(--glass-alpha));
-  --edge: rgb(255 255 255 / 0.1);
-  --fg: #eef3f6;
-  --fg2: rgb(238 243 246 / 0.8);
-  --fg3: rgb(238 243 246 / 0.6);
-  --hair: rgb(255 255 255 / 0.07);
-  --line: rgb(255 255 255 / 0.13);
-  --line-strong: rgb(255 255 255 / 0.34);
-  --field: rgb(255 255 255 / 0.06);
-  --surface: rgb(255 255 255 / 0.07);
-  --sel: rgb(86 189 220 / 0.15);
-  --hover: rgb(255 255 255 / 0.05);
+  --glass: rgb(26 14 18 / 0.92);
+  --edge: rgb(255 255 255 / 0.102);
+  --fg: rgb(247 238 240 / 1);
+  --fg2: rgb(247 238 240 / 0.8);
+  --fg3: rgb(247 238 240 / 0.6);
+  --hair: rgb(255 255 255 / 0.071);
+  --line: rgb(255 255 255 / 0.129);
+  --line-strong: rgb(255 255 255 / 0.341);
+  --field: rgb(255 255 255 / 0.059);
+  --surface: rgb(255 255 255 / 0.071);
+  --sel: rgb(239 71 101 / 0.161);
+  --hover: rgb(255 255 255 / 0.051);
   --bar: rgb(255 255 255 / 0.035);
-  --panel: rgb(6 10 15 / 0.3);
-  --track: rgb(255 255 255 / 0.13);
-  --accent: #56bddc;
-  --on-accent: #04202a;
-  --ok: #5fd8a0;
-  --warn: #f0b45a;
-  --bad: #ff8a8a;
-  --menu: rgb(28 34 43 / 0.97);
-  --scrim: rgb(8 12 17 / 0.55);
+  --panel: rgb(14 5 8 / 0.322);
+  --track: rgb(255 255 255 / 0.129);
+  --accent: rgb(239 71 101 / 1);
+  --on-accent: rgb(42 7 16 / 1);
+  --ok: rgb(95 216 160 / 1);
+  --warn: rgb(240 180 90 / 1);
+  --bad: rgb(255 138 138 / 1);
+  --menu: rgb(38 20 26 / 0.922);
+  --scrim: rgb(14 6 9 / 0.451);
 
   --shadow-menu: 0 18px 50px rgb(0 0 0 / 0.35);
   --shadow-dialog: 0 30px 80px rgb(0 0 0 / 0.5);

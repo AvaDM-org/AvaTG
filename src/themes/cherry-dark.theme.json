@@ -1,0 +1,33 @@
+{
+  "formatVersion": 1,
+  "id": "cherry-dark",
+  "name": "Cherry dark",
+  "variant": "Dark",
+  "solidFallback": {
+    "Glass": "#FF1A0E12"
+  },
+  "colors": {
+    "Glass": "#9E1B0D11",
+    "Edge": "#1AFFFFFF",
+    "Fg": "#FFF7EEF0",
+    "Fg2": "#CCF7EEF0",
+    "Fg3": "#99F7EEF0",
+    "Hair": "#12FFFFFF",
+    "Line": "#21FFFFFF",
+    "LineStrong": "#57FFFFFF",
+    "Field": "#0FFFFFFF",
+    "Surface": "#12FFFFFF",
+    "Sel": "#29EF4765",
+    "Hover": "#0DFFFFFF",
+    "Bar": "#09FFFFFF",
+    "Panel": "#520E0508",
+    "Track": "#21FFFFFF",
+    "Accent": "#FFEF4765",
+    "OnAccent": "#FF2A0710",
+    "Ok": "#FF5FD8A0",
+    "Warn": "#FFF0B45A",
+    "Bad": "#FFFF8A8A",
+    "Menu": "#EB26141A",
+    "Scrim": "#730E0609"
+  }
+}

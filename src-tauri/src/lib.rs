@@ -5,6 +5,7 @@ mod blur;
 mod db;
 mod files;
 mod proxy;
+mod themes;
 mod tools;
 mod tray;
 mod updater;
@@ -90,6 +91,11 @@ pub fn run() {
             proxy::system_proxy,
             blur::window_blur,
             updater::install_channel,
+            themes::themes_list,
+            themes::theme_read,
+            themes::theme_save,
+            themes::theme_remove,
+            themes::themes_folder,
             updater::update_check,
             updater::update_install,
         ])

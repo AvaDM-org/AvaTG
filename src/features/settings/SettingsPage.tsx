@@ -15,17 +15,20 @@ import { Icon } from "../../components/ui/Icon";
 import { Dropdown, MenuItem } from "../../components/ui/Menu";
 import { systemProxy, toolsDir } from "../../ipc";
 import { fmtBytes } from "../../lib/format";
+import logo from "../../assets/avatg-logo.png";
+import { AppearancePage } from "../appearance/AppearancePage";
 import { ToolsSettings } from "../tools/ToolsPanel";
 import { useUpdates } from "../updates/store";
 import { chooseFolder } from "./chooseFolder";
 import { Row, Section } from "./rows";
-import { hasBlur, useSettings, type Settings } from "./store";
+import { useSettings, type Settings } from "./store";
 import s from "./settings.module.css";
 
-type PageId = "general" | "downloads" | "files" | "tools" | "storage" | "about";
+type PageId = "general" | "appearance" | "downloads" | "files" | "tools" | "storage" | "about";
 
 const PAGES: { id: PageId; label: string; desc: string }[] = [
-  { id: "general", label: "General", desc: "How AvaTG starts, closes and looks." },
+  { id: "general", label: "General", desc: "How AvaTG starts and closes." },
+  { id: "appearance", label: "Appearance", desc: "Themes and the glass effect." },
   { id: "downloads", label: "Downloads", desc: "Where files go and how fast they arrive." },
   { id: "files", label: "Files", desc: "What is saved with each video." },
   { id: "tools", label: "Tools", desc: "Free programs AvaTG uses to download and convert." },
@@ -88,6 +91,7 @@ export function SettingsPage({ onBack, initialPage = "general" }: { onBack: () =
           <h1>{current.label}</h1>
           {current.desc && <p>{current.desc}</p>}
           {page === "general" && <GeneralPage />}
+          {page === "appearance" && <AppearancePage />}
           {page === "downloads" && <DownloadsSettings />}
           {page === "files" && <FilesPage />}
           {page === "tools" && <ToolsSettings />}
@@ -110,7 +114,6 @@ function GeneralPage() {
   const [resume, setResume] = useSetting("resumeOnLaunch");
   const [toTray, setToTray] = useSetting("closeToTray");
   const [dbl, setDbl] = useSetting("doubleClick");
-  const [glass, setGlass] = useSetting("glass");
   // Read live from the OS: the login item is the source of truth, not a stored flag.
   useEffect(() => void autostartEnabled().then(setAutostart, () => {}), []);
 
@@ -155,26 +158,6 @@ function GeneralPage() {
               { value: "folder", label: "Show in folder" },
             ]}
           />
-        </Row>
-        <Row
-          title="Glass effect"
-          desc={
-            hasBlur
-              ? "0% is a solid window; higher shows more of the blurred desktop"
-              : "The system does not blur behind this window, so it stays nearly solid"
-          }
-        >
-          <input
-            className={s.slider}
-            type="range"
-            min={0}
-            max={100}
-            step={5}
-            value={glass}
-            aria-label="Glass effect"
-            onChange={(e) => setGlass(Number(e.target.value))}
-          />
-          <span className={s.value}>{glass}%</span>
         </Row>
       </Section>
     </>
@@ -419,6 +402,13 @@ function AboutPage({ version }: { version: string }) {
   const { status, info, channel, check, error } = useUpdates();
   return (
     <>
+      <div className={s.aboutHead}>
+        <img src={logo} alt="AvaTG logo" width={64} height={64} />
+        <div>
+          <b>AvaTG {version}</b>
+          <small>Video and audio downloader, built like AvaDM</small>
+        </div>
+      </div>
       <UpdateCard />
       <Section heading="UPDATES">
         <Row title="Check for updates on launch" desc="Quietly; you are told when a new version is out">

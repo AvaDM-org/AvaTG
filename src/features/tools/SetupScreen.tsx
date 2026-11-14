@@ -1,5 +1,6 @@
 // First run: use the tools already on the system when their versions are good, download only what is missing
 // into AvaTG's own folder (no installer, no admin rights).
+import logo from "../../assets/avatg-logo.png";
 import { DragSpace, TopBar } from "../../components/layout";
 import { WindowControls } from "../../components/WindowControls";
 import { Button } from "../../components/ui/controls";
@@ -17,6 +18,7 @@ export function SetupScreen({ onReady }: { onReady: () => void }) {
   return (
     <>
       <TopBar>
+        <img src={logo} alt="" width={28} height={28} />
         <b style={{ fontSize: 16 }}>AvaTG</b>
         <DragSpace />
         <WindowControls />

@@ -192,3 +192,17 @@
   color: var(--fg2);
   line-height: 1.55;
 }
+
+.aboutHead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.aboutHead b {
+  display: block;
+  font-size: var(--fs-dialog);
+  font-weight: 700;
+}
+.aboutHead small {
+  color: var(--fg3);
+}

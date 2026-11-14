@@ -18,6 +18,8 @@ import { SettingsPage, type SettingsPageId } from "./features/settings/SettingsP
 import { useSettings } from "./features/settings/store";
 import { SetupScreen } from "./features/tools/SetupScreen";
 import { useTools } from "./features/tools/store";
+import { useAppearance } from "./features/appearance/store";
+import { importTheme } from "./features/appearance/AppearancePage";
 import { useUpdates } from "./features/updates/store";
 import { getSettings } from "./features/settings/store";
 import { onTrayAction } from "./ipc";
@@ -31,11 +33,15 @@ export default function App() {
   const [settingsPage, setSettingsPage] = useState<SettingsPageId>("general");
   const picker = usePicker((st) => st.state);
   const openLinks = usePicker((st) => st.open);
-  const drop = useDropLinks((links) => void openLinks(links));
+  const drop = useDropLinks(
+    (links) => void openLinks(links),
+    (text) => importTheme({ text }),
+  );
 
   useEffect(() => {
     void (async () => {
       await useSettings.getState().load();
+      await useAppearance.getState().load();
       // Tool paths first: downloads resumed on launch must run with the chosen yt-dlp, Deno and FFmpeg.
       const toolsReady = await useTools
         .getState()
@@ -107,7 +113,8 @@ export default function App() {
         (collection ? (
           <CollectionPage info={collection} statusBar={<DownloadsStatusBar />} />
         ) : page === "settings" ? (
-          <SettingsPage key={settingsPage}
+          <SettingsPage
+            key={settingsPage}
             initialPage={settingsPage}
             onBack={() => {
               setPage("downloads");

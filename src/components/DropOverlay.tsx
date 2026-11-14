@@ -8,9 +8,10 @@ import s from "./layout.module.css";
 
 type DropState = "links" | "none" | null;
 
-const TEXT_TYPES = ["text/uri-list", "text/plain", "text/html", "Files"];
+const TEXT_TYPES = ["text/uri-list", "text/plain", "text/html", "Files"]; // .txt/.html list links, .json is a theme
 
-export function useDropLinks(onLinks: (links: string[]) => void) {
+/** `onLinks` gets the links found; `onThemeText` gets each dropped .json file (a theme to import). */
+export function useDropLinks(onLinks: (links: string[]) => void, onThemeText: (text: string) => Promise<void>) {
   const [state, setState] = useState<DropState>(null);
   const depth = useRef(0); // dragenter/dragleave fire for every child element
 
@@ -33,7 +34,12 @@ export function useDropLinks(onLinks: (links: string[]) => void) {
       depth.current = 0;
       setState(null);
       const links = linksFromDataTransfer(e.dataTransfer);
-      for (const file of Array.from(e.dataTransfer.files)) {
+      const files = Array.from(e.dataTransfer.files);
+      // A dropped .json is a theme to import (like AvaDM), not a list of links.
+      const themes = files.filter((f) => /\.json$/i.test(f.name));
+      for (const f of themes) await onThemeText(await f.text());
+      if (themes.length && !links.length) return;
+      for (const file of files) {
         if (/\.(txt|csv|html?)$/i.test(file.name)) links.push(...extractLinks(await file.text()));
       }
       if (links.length) onLinks([...new Set(links)]);

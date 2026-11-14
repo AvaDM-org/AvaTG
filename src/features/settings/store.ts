@@ -1,7 +1,8 @@
 // App settings. Saved to SQLite one key at a time; every change applies immediately (no Save button).
 import { downloadDir } from "@tauri-apps/api/path";
 import { create } from "zustand";
-import { loadSettings, onWindowBlur, saveSetting, setCloseToTray, setProxy, systemProxy, windowBlur } from "../../ipc";
+import { loadSettings, saveSetting, setCloseToTray, setProxy, systemProxy } from "../../ipc";
+import { DEFAULT_THEME_ID } from "../../lib/themes";
 import { DEFAULT_PRESET, type DownloadOptions, type Preset, type SubtitleMode } from "../../lib/presets";
 import type { ToolChoice, ToolId } from "../../lib/toolVersions";
 
@@ -12,6 +13,8 @@ export interface Settings {
   doubleClick: "play" | "folder";
   /** 0 = solid window, 100 = full glass */
   glass: number;
+  /** a built-in or imported theme (Settings › Appearance) */
+  themeId: string;
   // Downloads
   outputDir: string;
   concurrency: number;
@@ -48,6 +51,7 @@ export const DEFAULTS: Settings = {
   closeToTray: true,
   doubleClick: "play",
   glass: 80,
+  themeId: DEFAULT_THEME_ID,
   outputDir: "",
   concurrency: 1,
   fragments: 4,
@@ -82,19 +86,6 @@ interface SettingsStore {
   set: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
 }
 
-/**
- * How see-through the window may get at 100% glass: the theme's full glass when the OS blurs what is behind
- * the window, much less without blur so the window stays readable (AvaDM DESIGN.md: glass is never required).
- */
-let maxTransparency = 0.12;
-
-/** Whether the OS blurs behind the window; known after `load`. */
-export let hasBlur = false;
-
-/** Window background alpha: from solid (1.0) at 0% to the most see-through allowed at 100%. */
-const applyGlass = (glass: number) =>
-  document.documentElement.style.setProperty("--glass-alpha", String(1 - maxTransparency * (glass / 100)));
-
 /** Tell Rust which proxy yt-dlp and tool downloads use. */
 export async function applyProxy(s: Pick<Settings, "proxyMode" | "proxyUrl">) {
   if (s.proxyMode === "none") return setProxy("");
@@ -102,19 +93,7 @@ export async function applyProxy(s: Pick<Settings, "proxyMode" | "proxyUrl">) {
   return setProxy(await systemProxy().catch(() => null));
 }
 
-/** Rust applies the blur once the window is on screen and then sends `window-blur`; it may already be done. */
-async function watchBlur() {
-  const set = (granted: boolean) => {
-    hasBlur = granted;
-    maxTransparency = granted ? 0.4 : 0.12;
-    applyGlass(useSettings.getState().settings.glass);
-  };
-  void onWindowBlur(set);
-  if (await windowBlur().catch(() => false)) set(true);
-}
-
 function applySideEffects<K extends keyof Settings>(key: K, value: Settings[K], all: Settings) {
-  if (key === "glass") applyGlass(value as number);
   if (key === "closeToTray") void setCloseToTray(value as boolean);
   if (key === "proxyMode" || key === "proxyUrl") void applyProxy(all);
 }
@@ -130,7 +109,6 @@ export const useSettings = create<SettingsStore>((set, get) => ({
       settings.outputDir = await downloadDir().catch(() => "");
     }
     set({ settings, loaded: true });
-    await watchBlur();
     void setCloseToTray(settings.closeToTray);
     await applyProxy(settings);
   },

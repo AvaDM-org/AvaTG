@@ -9,7 +9,7 @@ does the Check workflow on GitHub. Self-updates and the release workflow are wri
 ### Next
 1. Cut a test release (`v0.1.0`) and check every installer and the update feed; then a second version to test an
    actual update. Pre-release tags may fail the RPM build (RPM versions cannot contain `-`).
-2. Build the Cherry dark theme and the JSON theme system from the canvas (Settings › Appearance).
+2. Check the Cherry dark theme and the theme system in the app (built 2026-11-15, see below).
 3. Test on Windows and macOS (glass via `window-vibrancy`, the updater).
 
 ### Architecture (approved 2026-11-14)
@@ -115,7 +115,7 @@ Collected from AvaDM's git history and CHANGELOG. Each needs a AvaTG equivalent:
   URL (http, https, socks5), or none. Used by yt-dlp (`--proxy`) and by the tools download.
 - Window glass (2026-11-14): real blur like AvaDM. Windows/macOS via `window-vibrancy`; KDE via KWin's
   `org_kde_kwin_blur` Wayland protocol (native Wayland, X11 property as fallback); solid fallback elsewhere.
-- Brand and themes (2026-11-15, designed on the canvas, not built yet): the app is renamed **AvaTG**. Logo = AvaDM's
+- Brand and themes (2026-11-15, built; `src/lib/themes.ts`, `src/themes/`, `features/appearance`, `themes.rs`): the app is renamed **AvaTG**. Logo = AvaDM's
   mark recoloured to cherry (`#B0153A`). New default theme **Cherry dark** (accent `#EF4765`, dark text on it);
   **Dark glass** stays as a built-in theme. Theming like AvaDM: one JSON file of colour tokens per theme in AvaDM's
   format (`#AARRGGBB`, so AvaDM themes import as they are), built-ins inside the app, imported ones in a themes

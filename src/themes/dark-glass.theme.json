@@ -1,0 +1,33 @@
+{
+  "formatVersion": 1,
+  "id": "dark-glass",
+  "name": "Dark glass",
+  "variant": "Dark",
+  "solidFallback": {
+    "Glass": "#FF11161D"
+  },
+  "colors": {
+    "Glass": "#9910151C",
+    "Edge": "#1AFFFFFF",
+    "Fg": "#FFEEF3F6",
+    "Fg2": "#CCEEF3F6",
+    "Fg3": "#99EEF3F6",
+    "Hair": "#12FFFFFF",
+    "Line": "#21FFFFFF",
+    "LineStrong": "#57FFFFFF",
+    "Field": "#0FFFFFFF",
+    "Surface": "#12FFFFFF",
+    "Sel": "#2656BDDC",
+    "Hover": "#0DFFFFFF",
+    "Bar": "#09FFFFFF",
+    "Panel": "#4C060A0F",
+    "Track": "#21FFFFFF",
+    "Accent": "#FF56BDDC",
+    "OnAccent": "#FF04202A",
+    "Ok": "#FF5FD8A0",
+    "Warn": "#FFF0B45A",
+    "Bad": "#FFFF8A8A",
+    "Menu": "#E61C222B",
+    "Scrim": "#6B080C11"
+  }
+}

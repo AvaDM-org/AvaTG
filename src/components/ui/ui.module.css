@@ -26,7 +26,8 @@
   font-weight: 700;
 }
 .primary:hover:not(:disabled) {
-  background: #6fcbe6;
+  background: var(--accent);
+  filter: brightness(1.1);
 }
 .danger {
   background: transparent;

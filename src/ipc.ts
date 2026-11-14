@@ -103,6 +103,14 @@ export const updateInstall = () => invoke<void>("update_install");
 export const onUpdateProgress = (cb: (p: { downloaded: number; total: number | null }) => void): Promise<UnlistenFn> =>
   listen<{ downloaded: number; total: number | null }>("update-progress", (e) => cb(e.payload));
 
+// themes.rs
+export const themesList = () => invoke<string[]>("themes_list");
+/** Reads a .json file the user picked or dropped (at most 64 KB). */
+export const themeRead = (path: string) => invoke<string>("theme_read", { path });
+export const themeSave = (id: string, text: string) => invoke<void>("theme_save", { id, text });
+export const themeRemove = (id: string) => invoke<void>("theme_remove", { id });
+export const themesFolder = () => invoke<string>("themes_folder");
+
 // tray.rs
 export const updateTray = (tooltip: string, allPaused: boolean) => invoke<void>("tray_update", { tooltip, allPaused });
 export const setCloseToTray = (enabled: boolean) => invoke<void>("set_close_to_tray", { enabled });
