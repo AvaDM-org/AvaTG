@@ -401,3 +401,26 @@
 .spaceWarn {
   color: var(--warn);
 }
+
+/* "Already downloaded": a warning line and the Skip / Rename / Replace choice. */
+.duplicate {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--warn);
+  font-size: var(--fs-small);
+}
+.duplicateText {
+  display: flex;
+  gap: 8px;
+  color: var(--warn);
+}
+.duplicateText > span {
+  color: var(--fg);
+}
+.duplicateText small {
+  font: inherit;
+  color: var(--fg3);
+}

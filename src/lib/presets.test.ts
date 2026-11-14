@@ -102,3 +102,20 @@ describe("describePreset", () => {
     expect(rows.Quality).toBeUndefined();
   });
 });
+
+describe("output name", () => {
+  const o = {
+    subtitleMode: "embed",
+    autoCaptions: false,
+    fragments: 4,
+    limitMbps: null,
+    retries: 3,
+    socketTimeout: 20,
+  } as const;
+  it("adds a suffix for a second copy", () => {
+    const a = buildArgs(DEFAULT_PRESET, { outputDir: "/v", suffix: " (2)" }, o);
+    expect(a[a.indexOf("-o") + 1]).toBe("%(title)s (2).%(ext)s");
+    const b = buildArgs(DEFAULT_PRESET, { outputDir: "/v" }, o);
+    expect(b[b.indexOf("-o") + 1]).toBe("%(title)s.%(ext)s");
+  });
+});

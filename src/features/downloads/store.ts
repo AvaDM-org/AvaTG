@@ -28,7 +28,7 @@ const argsFor = (d: DownloadRecord) =>
   d.preset
     ? buildArgs(
         d.preset,
-        { outputDir: d.outputDir, subfolder: d.folder, index: d.index, partsDir: partsDirOf(d) },
+        { outputDir: d.outputDir, subfolder: d.folder, index: d.index, partsDir: partsDirOf(d), suffix: d.nameSuffix },
         downloadOptions(getSettings()),
       )
     : (d.args ?? []);

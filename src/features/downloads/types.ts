@@ -27,6 +27,8 @@ export interface DownloadRecord {
   index: number | null;
   /** folder the file lands in (outputDir plus folder) */
   dir: string;
+  /** added to the file name, e.g. " (2)" for a second copy of the same video (Rename) */
+  nameSuffix?: string | null;
   saveDescription: boolean;
   status: DownloadStatus;
   percent: number | null;

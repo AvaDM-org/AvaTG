@@ -18,7 +18,10 @@ export function NameCell({ d }: { d: DownloadRecord }) {
         {d.audioOnly && <Icon name="music" size={14} />}
       </div>
       <div className={s.nameText}>
-        <b title={d.title}>{d.title}</b>
+        <b title={d.title + (d.nameSuffix ?? "")}>
+          {d.title}
+          {d.nameSuffix}
+        </b>
         <small title={d.dir}>{[d.channel, fmtDuration(d.duration)].filter(Boolean).join(" · ")}</small>
       </div>
     </div>

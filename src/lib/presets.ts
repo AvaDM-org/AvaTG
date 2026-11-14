@@ -47,6 +47,8 @@ export interface OutputOptions {
   index?: number | null;
   /** where yt-dlp keeps the unfinished files (`--paths temp:`); the finished file is moved to outputDir */
   partsDir?: string | null;
+  /** added after the title, e.g. " (2)" */
+  suffix?: string | null;
 }
 
 export const STANDARD_HEIGHTS = [2160, 1440, 1080, 720, 480, 360];
@@ -152,7 +154,8 @@ export function buildArgs(p: Preset, out: OutputOptions, o: DownloadOptions): st
   if (out.partsDir) a.push("-P", `temp:${out.partsDir}`);
   const folder = out.subfolder ? `${safeName(out.subfolder)}/` : "";
   const prefix = out.index ? `${String(out.index).padStart(3, "0")} - ` : "";
-  a.push("-o", `${folder}${prefix}%(title)s.%(ext)s`);
+  const suffix = out.suffix?.trim() ? ` ${safeName(out.suffix)}` : "";
+  a.push("-o", `${folder}${prefix}%(title)s${suffix}.%(ext)s`);
   return a;
 }
 

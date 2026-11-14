@@ -2,6 +2,7 @@
 import { formatLabel, safeName, type Preset } from "../../lib/presets";
 import { playlistEntries, type Entry } from "../../lib/youtube";
 import { getSettings } from "../settings/store";
+import { planDuplicates, type Duplicate, type DuplicateChoice } from "./duplicates";
 import { useDownloads } from "./store";
 import type { DownloadRecord } from "./types";
 
@@ -11,6 +12,10 @@ export interface PickedVideo {
   channel: string | null;
   duration: number | null;
   thumbnail: string | null;
+  /** " (2)": a second copy of a video already in the folder */
+  nameSuffix?: string;
+  /** 1-based playlist position, used as a "001 - " file name prefix */
+  position?: number | null;
 }
 
 export const fromEntry = (e: Entry): PickedVideo => ({
@@ -29,19 +34,19 @@ export interface QueueOptions {
   outputDir?: string;
   /** subfolder, e.g. the playlist's title */
   folder?: string | null;
-  /** 1-based playlist positions, used as a "001 - " file name prefix */
-  positions?: number[];
+}
+
+/** The folder files land in: the download folder, or a subfolder of it. */
+export function targetDir({ outputDir, folder = null }: QueueOptions = {}): string {
+  const base = outputDir || getSettings().outputDir;
+  return folder ? `${base}/${safeName(folder)}` : base;
 }
 
 /** Queue videos with one preset. Returns how many were queued. */
-export function queueVideos(
-  videos: PickedVideo[],
-  preset: Preset,
-  { outputDir, folder = null, positions }: QueueOptions = {},
-) {
-  const settings = getSettings();
-  const base = outputDir || settings.outputDir;
-  const dir = folder ? `${base}/${safeName(folder)}` : base;
+export function queueVideos(videos: PickedVideo[], preset: Preset, opts: QueueOptions = {}) {
+  const base = opts.outputDir || getSettings().outputDir;
+  const folder = opts.folder ?? null;
+  const dir = targetDir(opts);
   const now = Date.now();
   const records: DownloadRecord[] = videos.map((v, i) => ({
     id: newId(),
@@ -56,8 +61,9 @@ export function queueVideos(
     preset,
     outputDir: base,
     folder,
-    index: positions?.[i] ?? null,
+    index: v.position ?? null,
     dir,
+    nameSuffix: v.nameSuffix ?? null,
     saveDescription: preset.description,
     status: "queued",
     percent: null,
@@ -69,6 +75,24 @@ export function queueVideos(
   useDownloads.getState().add(records);
   return records.length;
 }
+
+/**
+ * Queue videos after the "already downloaded" question: duplicates are skipped, renamed, or replace the old
+ * downloads (their rows go and their files are deleted). Returns how many were queued.
+ */
+export function queueWithChoice(
+  videos: PickedVideo[],
+  preset: Preset,
+  opts: QueueOptions,
+  dups: Duplicate[],
+  choice: DuplicateChoice,
+) {
+  const plan = planDuplicates(videos, dups, choice);
+  if (plan.replaced.length) useDownloads.getState().remove(ids(plan.replaced), true);
+  return plan.videos.length ? queueVideos(plan.videos, preset, opts) : 0;
+}
+
+const ids = (records: DownloadRecord[]) => records.map((r) => r.id);
 
 /** Expand playlists (picked on a channel's Playlists tab) into their videos, one folder per playlist. */
 export async function queuePlaylists(
@@ -84,11 +108,11 @@ export async function queuePlaylists(
     try {
       const info = await playlistEntries(pl.url, cookiesBrowser);
       const videos = info.entries.filter((e) => e.kind === "video");
-      queueVideos(videos.map(fromEntry), preset, {
-        outputDir,
-        folder: playlistFolder ? info.title : null,
-        positions: numberFiles ? videos.map((_, i) => i + 1) : undefined,
-      });
+      queueVideos(
+        videos.map((e, i) => ({ ...fromEntry(e), position: numberFiles ? i + 1 : null })),
+        preset,
+        { outputDir, folder: playlistFolder ? info.title : null },
+      );
     } catch (e) {
       errors.push(`${pl.title}: ${e}`);
     }

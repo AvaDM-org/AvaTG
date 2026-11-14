@@ -81,8 +81,9 @@ function General({ d, onAsk }: { d: DownloadRecord; onAsk: (a: Ask) => void }) {
         {d.audioOnly && <Icon name="music" size={22} />}
       </div>
       <div className={s.info}>
-        <b className={s.title} title={d.title}>
+        <b className={s.title} title={d.title + (d.nameSuffix ?? "")}>
           {d.title}
+          {d.nameSuffix}
         </b>
         <div className={s.path}>
           <Icon name="folder" size={13} />

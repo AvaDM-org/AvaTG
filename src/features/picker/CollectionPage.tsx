@@ -5,9 +5,14 @@ import { DragSpace, TopBar } from "../../components/layout";
 import { WindowControls } from "../../components/WindowControls";
 import { Button, Checkbox, IconButton, Switch, TextField } from "../../components/ui/controls";
 import { Icon } from "../../components/ui/Icon";
+import { toast } from "../../components/Toasts";
 import { fmtDuration, fmtTotalLength, plural } from "../../lib/format";
+import { formatLabel } from "../../lib/presets";
 import type { ChannelInfo, Entry, PlaylistInfo } from "../../lib/youtube";
-import { fromEntry, queuePlaylists, queueVideos } from "../downloads/enqueue";
+import type { DuplicateChoice } from "../downloads/duplicates";
+import { fromEntry, queuePlaylists, queueWithChoice, targetDir, type PickedVideo } from "../downloads/enqueue";
+import { useDuplicates } from "../downloads/useDuplicates";
+import { DuplicateNotice } from "./DuplicateNotice";
 import { SaveToField } from "./SaveToField";
 import { useSettings } from "../settings/store";
 import { FormatOptions, PresetMenu } from "./FormatOptions";
@@ -42,6 +47,7 @@ export function CollectionPage({ info, statusBar }: { info: PlaylistInfo | Chann
   const [filter, setFilter] = useState("");
   const [preset, setPreset] = useState(settings.preset);
   const [dir, setDir] = useState(settings.outputDir);
+  const [choice, setChoice] = useState<DuplicateChoice>("skip");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const lastClicked = useRef<number | null>(null);
@@ -63,10 +69,17 @@ export function CollectionPage({ info, statusBar }: { info: PlaylistInfo | Chann
   }, [entries, filter]);
   const position = useMemo(() => new Map(entries.map((e, i) => [e.id, i + 1])), [entries]);
 
-  const allEntries = tabs.flatMap((t) => t.entries);
-  const picked = allEntries.filter((e) => selected.has(e.id));
-  const pickedVideos = picked.filter((e) => e.kind === "video");
+  const picked = useMemo(() => tabs.flatMap((t) => t.entries).filter((e) => selected.has(e.id)), [tabs, selected]);
+  const pickedVideos = useMemo(() => picked.filter((e) => e.kind === "video"), [picked]);
   const pickedPlaylists = picked.filter((e) => e.kind === "playlist");
+  const folder = settings.playlistFolder && info.type === "playlist" && info.id ? info.title : null;
+  const numbered = settings.numberFiles && !isChannel;
+  const candidates: PickedVideo[] = useMemo(
+    () => pickedVideos.map((e) => ({ ...fromEntry(e), position: numbered ? (position.get(e.id) ?? null) : null })),
+    [pickedVideos, numbered, position],
+  );
+  const dups = useDuplicates(candidates, formatLabel(preset), targetDir({ outputDir: dir, folder }));
+  const skipped = choice === "skip" ? dups.length : 0;
   const selectable = visible.filter((e) => !isUnavailable(e));
   const visibleSelected = selectable.filter((e) => selected.has(e.id)).length;
 
@@ -98,13 +111,9 @@ export function CollectionPage({ info, statusBar }: { info: PlaylistInfo | Chann
   const download = async () => {
     setError(null);
     set("preset", preset);
-    const folder = settings.playlistFolder && info.type === "playlist" && info.id ? info.title : null;
-    if (pickedVideos.length) {
-      queueVideos(pickedVideos.map(fromEntry), preset, {
-        outputDir: dir,
-        folder,
-        positions: settings.numberFiles && !isChannel ? pickedVideos.map((e) => position.get(e.id) ?? 0) : undefined,
-      });
+    if (candidates.length) {
+      queueWithChoice(candidates, preset, { outputDir: dir, folder }, dups, choice);
+      if (skipped) toast(`Skipped ${plural(skipped, "video")} already in your downloads`);
     }
     if (pickedPlaylists.length) {
       setBusy(`Reading playlists 0 of ${pickedPlaylists.length}…`);
@@ -294,6 +303,7 @@ export function CollectionPage({ info, statusBar }: { info: PlaylistInfo | Chann
               <span>Number files in playlist order</span>
               <Switch label="Number files" checked={settings.numberFiles} onChange={(v) => set("numberFiles", v)} />
             </label>
+            <DuplicateNotice dups={dups} total={candidates.length} choice={choice} onChoice={setChoice} />
             {error && <div className={s.error}>{error}</div>}
           </div>
           <div className={s.railFoot}>
