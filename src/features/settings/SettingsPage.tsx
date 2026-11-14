@@ -8,12 +8,12 @@ import {
 } from "@tauri-apps/plugin-autostart";
 import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import { useEffect, useState } from "react";
-import { toastError } from "../../components/Toasts";
+import { toast, toastError } from "../../components/Toasts";
 import { WindowControls } from "../../components/WindowControls";
 import { Button, IconButton, ProgressBar, Segmented, Stepper, Switch, TextField } from "../../components/ui/controls";
 import { Icon } from "../../components/ui/Icon";
 import { Dropdown, MenuItem } from "../../components/ui/Menu";
-import { systemProxy, toolsDir } from "../../ipc";
+import { menuEntryStatus, setMenuEntry, systemProxy, toolsDir } from "../../ipc";
 import { fmtBytes } from "../../lib/format";
 import logo from "../../assets/avatg-logo.png";
 import { AppearancePage } from "../appearance/AppearancePage";
@@ -117,6 +117,18 @@ function GeneralPage() {
   // Read live from the OS: the login item is the source of truth, not a stored flag.
   useEffect(() => void autostartEnabled().then(setAutostart, () => {}), []);
 
+  const [menuEntry, setMenuEntryState] = useState<{ available: boolean; installed: boolean } | null>(null);
+  useEffect(() => void menuEntryStatus().then(setMenuEntryState, () => {}), []);
+  const toggleMenuEntry = async (on: boolean) => {
+    try {
+      await setMenuEntry(on);
+      setMenuEntryState(await menuEntryStatus());
+      toast(on ? "AvaTG is in the applications menu" : "Removed from the applications menu");
+    } catch (e) {
+      toastError(e);
+    }
+  };
+
   const toggleAutostart = async (on: boolean) => {
     try {
       await (on ? enableAutostart() : disableAutostart());
@@ -135,6 +147,13 @@ function GeneralPage() {
         <Row title="Resume unfinished downloads" desc="Continue downloads that were running when AvaTG closed">
           <Switch label="Resume unfinished downloads" checked={resume} onChange={setResume} />
         </Row>
+        {menuEntry?.available && (
+          <Row title="Applications menu" desc="Lists this AppImage in your desktop's app launcher">
+            <Button onClick={() => void toggleMenuEntry(!menuEntry.installed)}>
+              {menuEntry.installed ? "Remove from applications menu" : "Add to applications menu"}
+            </Button>
+          </Row>
+        )}
       </Section>
       <Section heading="WINDOW">
         <Row title="Close the window" desc="Downloads keep running in the tray">

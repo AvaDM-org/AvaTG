@@ -85,6 +85,11 @@ export const freeSpace = (path: string) => invoke<number>("free_space", { path }
 export const readLinkList = (path: string) => invoke<string>("read_link_list", { path });
 export const renameDescription = (videoPath: string) => invoke<void>("rename_description", { videoPath });
 
+// desktop.rs
+/** The Linux AppImage's own applications-menu entry; `available` is false everywhere else. */
+export const menuEntryStatus = () => invoke<{ available: boolean; installed: boolean }>("menu_entry_status");
+export const setMenuEntry = (enabled: boolean) => invoke<void>("menu_entry_set", { enabled });
+
 // proxy.rs
 /** null: let yt-dlp use proxy environment variables; "": connect directly; else a proxy URL. */
 export const setProxy = (url: string | null) => invoke<void>("set_proxy", { url });

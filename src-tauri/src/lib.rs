@@ -3,6 +3,7 @@
 
 mod blur;
 mod db;
+mod desktop;
 mod files;
 mod proxy;
 mod themes;
@@ -42,6 +43,7 @@ pub fn run() {
             let handle = app.handle();
             app.manage(db::Db::open(&db::db_path(handle)?)?);
             app.manage(tray::build(handle)?);
+            desktop::repair(handle);
             if !std::env::args().any(|a| a == MINIMIZED_ARG) {
                 tray::show_main_window(handle);
             }
@@ -77,6 +79,8 @@ pub fn run() {
             ytdlp::ytdlp_json,
             ytdlp::run_download,
             ytdlp::cancel_download,
+            desktop::menu_entry_status,
+            desktop::menu_entry_set,
             db::downloads_list,
             db::downloads_save,
             db::downloads_delete,
