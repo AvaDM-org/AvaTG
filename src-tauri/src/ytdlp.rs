@@ -37,10 +37,15 @@ fn ytdlp_command(app: &AppHandle, cookies_browser: &Option<String>) -> Result<Co
         return Err("yt-dlp is not installed. Open Settings → Tools.".into());
     }
     let deno = tool_path(app, "deno")?;
+    let bin = bin_dir(app)?;
     let mut cmd = hidden_command(&ytdlp);
+    // Keep Deno's cache inside TubeGrab's data folder instead of the user's ~/.cache/deno.
+    if let Some(data_dir) = bin.parent() {
+        cmd.env("DENO_DIR", data_dir.join("deno-cache"));
+    }
     cmd.arg("--ignore-config")
         .arg("--ffmpeg-location")
-        .arg(bin_dir(app)?)
+        .arg(&bin)
         .arg("--js-runtimes")
         .arg(format!("deno:{}", deno.to_string_lossy()));
     if let Some(b) = cookies_browser.as_deref().filter(|b| !b.is_empty()) {

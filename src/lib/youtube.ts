@@ -1,5 +1,16 @@
 // Classifies links and turns yt-dlp JSON into the small models the UI needs.
-import { ytdlpJson } from "./api";
+import { ytdlpJson } from "../ipc";
+
+// yt-dlp's JSON is large and loosely shaped; it is read defensively here and nowhere else.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Json = any;
+
+export interface SubtitleLang {
+  code: string;
+  name: string;
+  /** YouTube's machine captions */
+  auto: boolean;
+}
 
 export interface Entry {
   id: string;
@@ -31,6 +42,8 @@ export interface VideoInfo {
   heights: HeightOption[];
   audioSize: number | null;
   audioAbr: number | null;
+  /** real subtitles first, then auto-generated captions */
+  subtitles: SubtitleLang[];
   /** set when a watch URL also carried &list= */
   playlistUrl: string | null;
 }
@@ -86,16 +99,15 @@ export function classify(raw: string): LinkKind {
   return { kind: "video", url: u.toString(), playlistUrl: null };
 }
 
-function thumbFor(id: string, e: any): string | null {
+function thumbFor(id: string, e: Json): string | null {
   if (/^[\w-]{11}$/.test(id)) return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
   const t = e.thumbnails;
   if (Array.isArray(t) && t.length) return t[Math.min(t.length - 1, 3)].url ?? null;
   return e.thumbnail ?? null;
 }
 
-function toEntry(e: any, fallbackChannel: string | null): Entry {
-  const isPlaylist =
-    e.ie_key === "YoutubeTab" || e._type === "playlist" || String(e.url ?? "").includes("list=");
+function toEntry(e: Json, fallbackChannel: string | null): Entry {
+  const isPlaylist = e.ie_key === "YoutubeTab" || e._type === "playlist" || String(e.url ?? "").includes("list=");
   const id = String(e.id ?? "");
   return {
     id,
@@ -109,11 +121,11 @@ function toEntry(e: any, fallbackChannel: string | null): Entry {
   };
 }
 
-function parseVideo(j: any, playlistUrl: string | null): VideoInfo {
-  const formats: any[] = j.formats ?? [];
-  const size = (f: any): number | null => f.filesize ?? f.filesize_approx ?? null;
+function parseVideo(j: Json, playlistUrl: string | null): VideoInfo {
+  const formats: Json[] = j.formats ?? [];
+  const size = (f: Json): number | null => f.filesize ?? f.filesize_approx ?? null;
   const audio = formats.filter((f) => f.vcodec === "none" && f.acodec && f.acodec !== "none");
-  const bestAudio = audio.reduce<any>((b, f) => ((f.abr ?? 0) > (b?.abr ?? 0) ? f : b), null);
+  const bestAudio = audio.reduce<Json>((b, f) => ((f.abr ?? 0) > (b?.abr ?? 0) ? f : b), null);
   const byHeight = new Map<number, HeightOption>();
   for (const f of formats) {
     if (!f.height || !f.vcodec || f.vcodec === "none") continue;
@@ -138,35 +150,50 @@ function parseVideo(j: any, playlistUrl: string | null): VideoInfo {
     heights,
     audioSize: aSize,
     audioAbr: bestAudio?.abr ?? null,
+    subtitles: subtitleLangs(j),
     playlistUrl,
   };
 }
 
-export function parsePlaylist(j: any): PlaylistInfo {
+function subtitleLangs(j: Json): SubtitleLang[] {
+  const list = (obj: Json, auto: boolean): SubtitleLang[] =>
+    Object.entries(obj ?? {})
+      .filter(([code]) => code !== "live_chat")
+      .map(([code, tracks]) => ({ code, auto, name: (tracks as Json[])?.[0]?.name ?? code }));
+  const real = list(j.subtitles, false);
+  const have = new Set(real.map((l) => l.code));
+  // Auto captions exist for every translation target; keep only the original-language ones ("-orig") and English.
+  const auto = list(j.automatic_captions, true).filter(
+    (l) => !have.has(l.code) && (l.code.endsWith("-orig") || l.code === "en"),
+  );
+  return [...real, ...auto];
+}
+
+export function parsePlaylist(j: Json): PlaylistInfo {
   const channel = j.channel ?? j.uploader ?? null;
   return {
     type: "playlist",
     id: j.id,
     title: j.title ?? j.id,
     channel,
-    entries: (j.entries ?? []).filter(Boolean).map((e: any) => toEntry(e, channel)),
+    entries: (j.entries ?? []).filter(Boolean).map((e: Json) => toEntry(e, channel)),
   };
 }
 
-async function tab(url: string, cookies?: string): Promise<{ title: string | null; entries: Entry[] }> {
+async function tab(url: string, cookies: string): Promise<{ title: string | null; entries: Entry[] }> {
   try {
-    const j = await ytdlpJson(url, true, cookies);
+    const j: Json = await ytdlpJson(url, true, cookies);
     const channel = j.channel ?? j.uploader ?? null;
     return {
       title: channel,
-      entries: (j.entries ?? []).filter(Boolean).map((e: any) => toEntry(e, channel)),
+      entries: (j.entries ?? []).filter(Boolean).map((e: Json) => toEntry(e, channel)),
     };
   } catch {
     return { title: null, entries: [] }; // e.g. channel without a Shorts tab
   }
 }
 
-export async function analyze(raw: string, cookies?: string): Promise<Analysis> {
+export async function analyze(raw: string, cookies: string): Promise<Analysis> {
   const link = classify(raw);
   if (link.kind === "channel") {
     const [videos, shorts, playlists] = await Promise.all([
@@ -186,35 +213,15 @@ export async function analyze(raw: string, cookies?: string): Promise<Analysis> 
       playlists: playlists.entries.map((e) => ({ ...e, kind: "playlist" as const })),
     };
   }
-  if (link.kind === "playlist") return parsePlaylist(await ytdlpJson(link.url, true, cookies));
+  if (link.kind === "playlist") return parsePlaylist((await ytdlpJson(link.url, true, cookies)) as Json);
 
   // Unknown or video link: a flat query first tells us if a non-YouTube link is a playlist.
-  const j = await ytdlpJson(link.url, false, cookies);
+  const j: Json = await ytdlpJson(link.url, false, cookies);
   if (j._type === "playlist") return parsePlaylist(j);
   return parseVideo(j, link.playlistUrl);
 }
 
 /** Entries of one playlist (used when queueing playlists picked from a channel). */
-export async function playlistEntries(url: string, cookies?: string): Promise<PlaylistInfo> {
-  return parsePlaylist(await ytdlpJson(url, true, cookies));
-}
-
-export function fmtDuration(s: number | null): string {
-  if (s == null) return "";
-  s = Math.round(s);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = String(s % 60).padStart(2, "0");
-  return h ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
-}
-
-export function fmtBytes(b: number | null | undefined): string {
-  if (b == null || !isFinite(b)) return "";
-  const u = ["B", "KB", "MB", "GB", "TB"];
-  let i = 0;
-  while (b >= 1024 && i < u.length - 1) {
-    b /= 1024;
-    i++;
-  }
-  return `${b.toFixed(b >= 100 || i === 0 ? 0 : 1)} ${u[i]}`;
+export async function playlistEntries(url: string, cookies: string): Promise<PlaylistInfo> {
+  return parsePlaylist((await ytdlpJson(url, true, cookies)) as Json);
 }

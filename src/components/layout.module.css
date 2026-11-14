@@ -1,0 +1,137 @@
+/* Window chrome: the rounded glass window, the top bar (doubles as the title bar) and the status bar. */
+
+.window {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--r-xl);
+  background: var(--glass);
+  box-shadow: inset 0 0 0 1px var(--edge);
+}
+
+.topbar {
+  height: 64px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px 0 20px;
+  border-bottom: 1px solid var(--hair);
+  background: var(--bar);
+}
+
+.statusbar {
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  border-top: 1px solid var(--hair);
+  background: var(--bar);
+  font-size: var(--fs-help);
+  color: var(--fg3);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--fg2);
+  font-size: var(--fs-help);
+}
+.chip:hover {
+  color: var(--fg);
+}
+.chipOn {
+  border-color: var(--accent);
+  background: var(--sel);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.toasts {
+  position: absolute;
+  right: 20px;
+  bottom: 52px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 344px;
+}
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 12px 12px 14px;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--line);
+  background: var(--menu);
+  box-shadow: var(--shadow-menu);
+  font-size: var(--fs-small);
+  color: var(--fg2);
+  user-select: text;
+}
+.toast > span {
+  flex: 1;
+  white-space: pre-wrap;
+}
+.toastBad {
+  color: var(--bad);
+}
+
+.dropOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  background: var(--scrim);
+  pointer-events: none;
+  border-radius: var(--r-xl);
+}
+.dropFrame {
+  position: absolute;
+  inset: 14px;
+  border-radius: var(--r-dialog);
+  border: 2px dashed var(--accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+}
+.dropFrame[data-none] {
+  border-color: var(--warn);
+}
+.dropIcon {
+  width: 76px;
+  height: 76px;
+  border-radius: 20px;
+  display: grid;
+  place-content: center;
+  background: var(--sel);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+.dropFrame[data-none] .dropIcon {
+  border-color: var(--warn);
+  color: var(--warn);
+  background: rgb(240 180 90 / 0.12);
+}
+.dropFrame h2 {
+  margin: 0;
+  font-size: var(--fs-title);
+}
+.dropFrame p {
+  margin: 0;
+  color: var(--fg2);
+}

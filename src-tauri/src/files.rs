@@ -53,6 +53,17 @@ pub fn delete_files(paths: Vec<String>) -> Result<(), String> {
     Ok(())
 }
 
+/// yt-dlp writes the description as `<name>.description`; TubeGrab saves it as `<name>.txt` next to the video.
+#[tauri::command]
+pub fn rename_description(video_path: String) -> Result<(), String> {
+    let video = Path::new(&video_path);
+    let from = video.with_extension("description");
+    if !from.exists() {
+        return Ok(());
+    }
+    std::fs::rename(&from, video.with_extension("txt")).map_err(|e| e.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

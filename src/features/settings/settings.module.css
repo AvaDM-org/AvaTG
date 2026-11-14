@@ -1,0 +1,194 @@
+/* Settings: left navigation on the Panel tone, grouped rows on the right (AvaDM DESIGN.md section 6). */
+
+.page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.nav {
+  width: 232px;
+  flex-shrink: 0;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-right: 1px solid var(--hair);
+  background: var(--panel);
+}
+.navHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: var(--fs-dialog);
+  font-weight: 700;
+}
+.navItem {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--fg2);
+  font-size: var(--fs-name);
+  font-weight: 500;
+  text-align: left;
+}
+.navItem:hover {
+  background: var(--hover);
+}
+.navItem[aria-current="page"] {
+  background: var(--sel);
+  color: var(--fg);
+  font-weight: 600;
+}
+.navFoot {
+  margin-top: auto;
+  padding: 12px 0 0 12px;
+  border-top: 1px solid var(--hair);
+  font-size: var(--fs-help);
+  color: var(--fg3);
+}
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.titlebar {
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 14px;
+}
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 56px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.content h1 {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 700;
+}
+.content > p {
+  margin: -16px 0 0;
+  color: var(--fg3);
+}
+.section h2 {
+  margin: 0 4px 8px;
+  font-size: var(--fs-help);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--fg3);
+}
+.group {
+  border-radius: var(--r-xl);
+  border: 1px solid var(--hair);
+  background: var(--surface);
+  overflow: hidden;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 52px;
+  padding: 8px 18px;
+}
+.row + .row {
+  border-top: 1px solid var(--hair);
+}
+.rowText {
+  flex: 1;
+  min-width: 0;
+}
+.rowText b {
+  display: block;
+  font-size: var(--fs-name);
+  font-weight: 600;
+}
+.rowText small {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fs-help);
+  color: var(--fg3);
+}
+.control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.slider {
+  width: 220px;
+  accent-color: var(--accent);
+}
+.value {
+  width: 40px;
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.small {
+  width: 64px;
+}
+.tile {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  margin-right: -10px;
+  display: grid;
+  place-content: center;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--field);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--fg2);
+}
+.ok {
+  color: var(--ok) !important;
+}
+.warn {
+  color: var(--warn) !important;
+}
+.bad {
+  color: var(--bad) !important;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--hair);
+  background: var(--surface);
+}
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.cardIcon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-content: center;
+  border-radius: var(--r-lg);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.intro {
+  margin: 0;
+  color: var(--fg2);
+  line-height: 1.55;
+}

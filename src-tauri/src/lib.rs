@@ -67,6 +67,7 @@ pub fn run() {
             db::settings_save,
             files::delete_partials,
             files::delete_files,
+            files::rename_description,
             tray::tray_update,
             tray::set_close_to_tray,
         ])

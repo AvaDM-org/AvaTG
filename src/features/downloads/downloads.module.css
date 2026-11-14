@@ -1,0 +1,245 @@
+/* Downloads list: column header, 52 px rows, status cell, hover actions. */
+
+.search {
+  width: 250px;
+  flex-shrink: 0;
+}
+.kbd {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  color: var(--fg3);
+}
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--h-control);
+  padding: 0 10px 0 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  white-space: nowrap;
+}
+.trigger[aria-expanded="true"] {
+  border-color: var(--accent);
+  background: var(--sel);
+}
+.trigger span {
+  color: var(--fg3);
+}
+.trigger b {
+  font-weight: 600;
+}
+.vdivider {
+  width: 1px;
+  height: 20px;
+  background: var(--line);
+  flex-shrink: 0;
+}
+.selCount {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.header {
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  font-size: var(--fs-head);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--fg3);
+}
+.header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+}
+.header button[data-active] {
+  color: var(--fg);
+}
+
+.cCheck {
+  width: 40px;
+  flex-shrink: 0;
+}
+.cName {
+  flex: 1;
+  min-width: 0;
+}
+.cFormat {
+  width: 124px;
+  flex-shrink: 0;
+}
+.cSize {
+  width: 84px;
+  flex-shrink: 0;
+}
+.cStatus {
+  width: 220px;
+  flex-shrink: 0;
+  padding-right: 16px;
+}
+.cSpeed {
+  width: 88px;
+  flex-shrink: 0;
+}
+.cActions {
+  width: 100px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 12px 8px;
+}
+.row {
+  height: var(--h-row);
+  margin: 1px 0;
+  display: flex;
+  align-items: center;
+  padding: 0 8px 0 20px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-small);
+}
+.row:hover {
+  background: var(--hover);
+}
+.row[data-selected] {
+  background: var(--sel);
+}
+.row .cActions > * {
+  visibility: hidden;
+}
+.row:hover .cActions > *,
+.row[data-selected] .cActions > *,
+.row:focus-within .cActions > * {
+  visibility: visible;
+}
+.row .cActions button {
+  background: var(--surface);
+}
+
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 16px;
+}
+.thumb {
+  position: relative;
+  width: 60px;
+  height: 34px;
+  flex-shrink: 0;
+  display: grid;
+  place-content: center;
+  border-radius: 7px;
+  background: var(--surface) center / cover no-repeat;
+  box-shadow: inset 0 0 0 1px var(--hair);
+  color: rgb(255 255 255 / 0.85);
+}
+.nameText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nameText b {
+  font-size: var(--fs-name);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nameText small {
+  font-size: var(--fs-path);
+  color: var(--fg3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.muted {
+  color: var(--fg3);
+}
+.format {
+  color: var(--fg2);
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.barLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.barLine > :first-child {
+  flex: 1;
+}
+.barLine b {
+  width: 32px;
+  text-align: right;
+  font-size: var(--fs-help);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.statusLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-help);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.statusLine b {
+  font-weight: 600;
+}
+.statusLine span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--fg3);
+}
+.accent {
+  color: var(--accent);
+}
+.ok {
+  color: var(--ok);
+}
+.warn {
+  color: var(--warn);
+}
+.bad {
+  color: var(--bad);
+}
+
+.empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--fg3);
+  text-align: center;
+}
+.empty b {
+  color: var(--fg);
+  font-size: 16px;
+}
