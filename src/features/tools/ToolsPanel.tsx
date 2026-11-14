@@ -2,7 +2,9 @@
 // Used by the first-run screen and Settings > Tools.
 import { open as openFile } from "@tauri-apps/plugin-dialog";
 import { useEffect, useState } from "react";
-import { Button, ProgressBar } from "../../components/ui/controls";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { toastError } from "../../components/Toasts";
+import { Button, IconButton, ProgressBar } from "../../components/ui/controls";
 import { Icon } from "../../components/ui/Icon";
 import { Dropdown, MenuItem } from "../../components/ui/Menu";
 import {
@@ -20,11 +22,23 @@ import { useSettings } from "../settings/store";
 import s from "../settings/settings.module.css";
 import { useTools } from "./store";
 
-const ABOUT: Record<ToolId, { tile: string; what: string }> = {
-  ytdlp: { tile: "YT", what: "Downloads the videos" },
-  deno: { tile: "JS", what: "Runs YouTube's player code for yt-dlp" },
-  ffmpeg: { tile: "FF", what: "Joins video and audio, converts formats" },
+export const ABOUT: Record<ToolId, { tile: string; what: string; site: string }> = {
+  ytdlp: { tile: "YT", what: "Downloads the videos", site: "https://github.com/yt-dlp/yt-dlp" },
+  deno: { tile: "JS", what: "Runs YouTube's player code for yt-dlp", site: "https://github.com/denoland/deno" },
+  // FFmpeg's official GitHub mirror (the project itself lives at ffmpeg.org).
+  ffmpeg: { tile: "FF", what: "Joins video and audio, converts formats", site: "https://github.com/FFmpeg/FFmpeg" },
 };
+
+/** Opens the tool's official project page. */
+export function ProjectLink({ id, name }: { id: ToolId; name: string }) {
+  return (
+    <IconButton
+      icon="link"
+      label={`${name} project page`}
+      onClick={() => void openUrl(ABOUT[id].site).catch(toastError)}
+    />
+  );
+}
 
 const SOURCES: { value: ToolSource; label: string; hint: string }[] = [
   { value: "auto", label: "Automatic", hint: "System copy if good" },
@@ -116,6 +130,7 @@ export function ToolsSettings() {
               desc={<span title={r?.path ?? undefined}>{desc}</span>}
               descTone={!r?.check.ok ? "bad" : r.check.note || updatable ? "warn" : undefined}
             >
+              <ProjectLink id={t.id} name={t.name} />
               <Dropdown
                 label={`${t.name} source`}
                 width={220}

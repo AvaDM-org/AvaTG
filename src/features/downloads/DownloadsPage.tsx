@@ -520,7 +520,6 @@ export function DownloadsStatusBar({
               onSelect={() => {
                 set("concurrency", c);
                 close();
-                useDownloads.getState().admit();
               }}
             >
               {c} at a time

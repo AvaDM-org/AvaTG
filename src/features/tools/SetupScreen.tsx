@@ -6,7 +6,7 @@ import { Button } from "../../components/ui/controls";
 import { Row, Section } from "../settings/rows";
 import s from "../settings/settings.module.css";
 import { useTools } from "./store";
-import { InstallCard, useInstaller } from "./ToolsPanel";
+import { InstallCard, ProjectLink, useInstaller } from "./ToolsPanel";
 
 export function SetupScreen({ onReady }: { onReady: () => void }) {
   const { infos, resolved } = useTools();
@@ -45,7 +45,9 @@ export function SetupScreen({ onReady }: { onReady: () => void }) {
                       : "Will be downloaded"
                 }
                 descTone={r?.check.ok ? "ok" : undefined}
-              />
+              >
+                <ProjectLink id={t.id} name={t.name} />
+              </Row>
             );
           })}
         </Section>

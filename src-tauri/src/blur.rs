@@ -6,57 +6,85 @@
 //!   solid so it stays readable (`window_blur` reports which case applies).
 
 use std::sync::Mutex;
-use tauri::WebviewWindow;
+use std::time::Duration;
+use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
-/// Whether the OS blurs what is behind the window; None until asked for while the window is on screen.
+/// Whether the OS blurs what is behind the window; None until the window has been on screen.
 #[derive(Default)]
 pub struct BlurState(Mutex<Option<bool>>);
 
-/// Asks for the blur the first time (the window must be on screen to have a surface), then reports the result.
-/// A plain (non-async) command, so it runs on the main thread as GTK requires.
+/// What is known so far (false until the blur has been applied). The page also gets a `window-blur` event.
 #[tauri::command]
-pub fn window_blur(window: WebviewWindow, state: tauri::State<'_, BlurState>) -> bool {
-    let Ok(mut known) = state.0.lock() else {
-        return false;
-    };
-    if let Some(granted) = *known {
-        return granted;
-    }
-    if !window.is_visible().unwrap_or(false) {
-        return false; // started hidden in the tray: ask again once it is shown
-    }
-    let granted = apply(&window);
-    *known = Some(granted);
-    granted
+pub fn window_blur(state: tauri::State<'_, BlurState>) -> bool {
+    state.0.lock().ok().and_then(|k| *k).unwrap_or(false)
 }
 
-/// Ask for blur behind `window`. Returns whether it was granted.
-fn apply(window: &WebviewWindow) -> bool {
+/// Apply the blur once the main window is on screen. Call after showing the window; later calls do nothing.
+/// The window gets its native surface a moment after `show()`, so this retries for a few seconds.
+pub fn ensure(app: &AppHandle) {
+    if app
+        .state::<BlurState>()
+        .0
+        .lock()
+        .ok()
+        .and_then(|k| *k)
+        .is_some()
+    {
+        return;
+    }
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        for _ in 0..20 {
+            tokio::time::sleep(Duration::from_millis(150)).await;
+            let (tx, rx) = std::sync::mpsc::channel();
+            let handle = app.clone();
+            // GTK must be called on the main thread.
+            let _ = app.run_on_main_thread(move || {
+                let result = handle.get_webview_window("main").and_then(|w| apply(&w));
+                let _ = tx.send(result);
+            });
+            let Ok(Some(granted)) = rx.recv() else {
+                continue;
+            };
+            if let Ok(mut known) = app.state::<BlurState>().0.lock() {
+                *known = Some(granted);
+            }
+            let _ = app.emit("window-blur", granted);
+            return;
+        }
+    });
+}
+
+/// Ask for blur behind `window`: Some(granted), or None when the window has no native surface yet.
+fn apply(window: &WebviewWindow) -> Option<bool> {
     #[cfg(windows)]
     {
         use window_vibrancy::{apply_acrylic, apply_blur};
         let tint = Some((16, 21, 28, 120));
-        return apply_acrylic(window, tint).is_ok() || apply_blur(window, tint).is_ok();
+        return Some(apply_acrylic(window, tint).is_ok() || apply_blur(window, tint).is_ok());
     }
     #[cfg(target_os = "macos")]
     {
         use window_vibrancy::{NSVisualEffectMaterial, apply_vibrancy};
-        return apply_vibrancy(window, NSVisualEffectMaterial::HudWindow, None, Some(14.0)).is_ok();
+        return Some(
+            apply_vibrancy(window, NSVisualEffectMaterial::HudWindow, None, Some(14.0)).is_ok(),
+        );
     }
     #[cfg(target_os = "linux")]
     {
         return match wayland::apply(window) {
-            Ok(()) => true,
-            Err(e) => {
+            Ok(()) => Some(true),
+            Err(wayland::Error::NotReady) => None,
+            Err(wayland::Error::Denied(e)) => {
                 eprintln!("No blur behind the window: {e}");
-                false
+                Some(false)
             }
         };
     }
     #[allow(unreachable_code)]
     {
         let _ = window;
-        false
+        Some(false)
     }
 }
 
@@ -86,6 +114,19 @@ mod wayland {
     unsafe extern "C" {
         fn gdk_wayland_window_get_wl_surface(window: *mut gdk_sys::GdkWindow) -> *mut c_void;
         fn gdk_wayland_display_get_wl_display(display: *mut gdk_sys::GdkDisplay) -> *mut c_void;
+    }
+
+    pub enum Error {
+        /// The window has no native surface yet: try again shortly.
+        NotReady,
+        /// The compositor cannot blur this window.
+        Denied(String),
+    }
+
+    impl From<String> for Error {
+        fn from(e: String) -> Self {
+            Error::Denied(e)
+        }
     }
 
     #[derive(Default)]
@@ -130,12 +171,17 @@ mod wayland {
     delegate_noop!(State: ignore OrgKdeKwinBlurManager);
     delegate_noop!(State: ignore OrgKdeKwinBlur);
 
-    pub fn apply(window: &WebviewWindow) -> Result<(), String> {
+    pub fn apply(window: &WebviewWindow) -> Result<(), Error> {
+        if !window.is_visible().unwrap_or(false) {
+            return Err(Error::NotReady);
+        }
         let gtk_window = window.gtk_window().map_err(|e| e.to_string())?;
-        let gdk_window = gtk_window.window().ok_or("the window is not shown yet")?;
+        let Some(gdk_window) = gtk_window.window() else {
+            return Err(Error::NotReady);
+        };
         let display = gdk_window.display();
         if display.type_().name() != "GdkWaylandDisplay" {
-            return Err("not a Wayland session".into());
+            return Err(Error::Denied("not a Wayland session".into()));
         }
         // SAFETY: both are Wayland GDK objects (checked above) that live as long as the window.
         let (wl_display, wl_surface) = unsafe {
@@ -145,7 +191,7 @@ mod wayland {
             )
         };
         if wl_display.is_null() || wl_surface.is_null() {
-            return Err("no Wayland surface".into());
+            return Err(Error::NotReady);
         }
 
         // Talk to the compositor on GTK's own connection, with a queue of our own.
@@ -164,7 +210,7 @@ mod wayland {
             .or_else(|_| kwin_blur(&globals, &mut queue, &qh, &surface));
         // Blur takes effect on the surface's next commit: GTK's next frame.
         gtk_window.queue_draw();
-        applied
+        Ok(applied?)
     }
 
     /// ext_background_effect_v1: a blur region covering the whole surface (the compositor clips it).

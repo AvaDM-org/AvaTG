@@ -15,7 +15,7 @@ import { CollectionPage } from "./features/picker/CollectionPage";
 import { usePicker } from "./features/picker/store";
 import { VideoDialog } from "./features/picker/VideoDialog";
 import { SettingsPage } from "./features/settings/SettingsPage";
-import { refreshBlur, useSettings } from "./features/settings/store";
+import { useSettings } from "./features/settings/store";
 import { SetupScreen } from "./features/tools/SetupScreen";
 import { useTools } from "./features/tools/store";
 import { onTrayAction } from "./ipc";
@@ -44,12 +44,6 @@ export default function App() {
   }, []);
 
   useTraySync();
-
-  // A window that started hidden in the tray gets its glass blur once it is shown.
-  useEffect(() => {
-    const un = getCurrentWindow().onFocusChanged(({ payload: focused }) => focused && void refreshBlur());
-    return () => void un.then((f) => f());
-  }, []);
 
   const addFromClipboard = async () => {
     const text = (await readText().catch(() => "")) ?? "";

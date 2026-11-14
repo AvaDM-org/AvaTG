@@ -81,6 +81,9 @@ export const systemProxy = () => invoke<string | null>("system_proxy");
 // blur.rs
 /** Whether the OS blurs what is behind the window (KWin, Windows acrylic, macOS vibrancy). */
 export const windowBlur = () => invoke<boolean>("window_blur");
+/** Sent once the blur has been applied (or refused) after the window first appears. */
+export const onWindowBlur = (cb: (granted: boolean) => void): Promise<UnlistenFn> =>
+  listen<boolean>("window-blur", (e) => cb(e.payload));
 
 // tray.rs
 export const updateTray = (tooltip: string, allPaused: boolean) => invoke<void>("tray_update", { tooltip, allPaused });

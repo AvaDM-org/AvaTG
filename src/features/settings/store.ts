@@ -1,7 +1,7 @@
 // App settings. Saved to SQLite one key at a time; every change applies immediately (no Save button).
 import { downloadDir } from "@tauri-apps/api/path";
 import { create } from "zustand";
-import { loadSettings, saveSetting, setCloseToTray, setProxy, systemProxy, windowBlur } from "../../ipc";
+import { loadSettings, onWindowBlur, saveSetting, setCloseToTray, setProxy, systemProxy, windowBlur } from "../../ipc";
 import { DEFAULT_PRESET, type DownloadOptions, type Preset, type SubtitleMode } from "../../lib/presets";
 import type { ToolChoice, ToolId } from "../../lib/toolVersions";
 
@@ -97,12 +97,15 @@ export async function applyProxy(s: Pick<Settings, "proxyMode" | "proxyUrl">) {
   return setProxy(await systemProxy().catch(() => null));
 }
 
-/** Ask (again) whether the OS blurs behind the window; a window that started hidden in the tray has no answer yet. */
-export async function refreshBlur() {
-  if (hasBlur) return;
-  hasBlur = await windowBlur().catch(() => false);
-  maxTransparency = hasBlur ? 0.4 : 0.12;
-  applyGlass(useSettings.getState().settings.glass);
+/** Rust applies the blur once the window is on screen and then sends `window-blur`; it may already be done. */
+async function watchBlur() {
+  const set = (granted: boolean) => {
+    hasBlur = granted;
+    maxTransparency = granted ? 0.4 : 0.12;
+    applyGlass(useSettings.getState().settings.glass);
+  };
+  void onWindowBlur(set);
+  if (await windowBlur().catch(() => false)) set(true);
 }
 
 function applySideEffects<K extends keyof Settings>(key: K, value: Settings[K], all: Settings) {
@@ -122,7 +125,7 @@ export const useSettings = create<SettingsStore>((set, get) => ({
       settings.outputDir = await downloadDir().catch(() => "");
     }
     set({ settings, loaded: true });
-    await refreshBlur();
+    await watchBlur();
     void setCloseToTray(settings.closeToTray);
     await applyProxy(settings);
   },

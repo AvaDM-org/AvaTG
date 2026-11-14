@@ -13,11 +13,22 @@ import {
   stopDownload,
   type DownloadEvent,
 } from "../../ipc";
-import { getSettings } from "../settings/store";
+import { buildArgs } from "../../lib/presets";
+import { downloadOptions, getSettings, useSettings } from "../settings/store";
 import type { DownloadRecord, LiveProgress } from "./types";
 
-/** What happens when a stopped yt-dlp process ends. */
-type StopReason = "paused" | "cancelled" | "removed";
+/** What happens when a stopped yt-dlp process ends. "requeued": over the downloads-at-a-time limit. */
+type StopReason = "paused" | "cancelled" | "removed" | "requeued";
+
+/** The yt-dlp arguments for a download, from its recipe and the current settings. */
+const argsFor = (d: DownloadRecord) =>
+  d.preset
+    ? buildArgs(
+        d.preset,
+        { outputDir: d.outputDir, subfolder: d.folder, index: d.index },
+        downloadOptions(getSettings()),
+      )
+    : (d.args ?? []);
 
 interface DownloadsStore {
   items: DownloadRecord[];
@@ -78,7 +89,7 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
     patch(id, { status: "running", error: null });
     setLive(id, { part: 0, phase: "Starting", speed: null, eta: null });
     try {
-      const file = await runDownload(id, d.url, d.args, getSettings().cookiesBrowser);
+      const file = await runDownload(id, d.url, argsFor(d), getSettings().cookiesBrowser);
       if (file && d.saveDescription) await renameDescription(file).catch(() => {});
       patch(id, { status: "done", percent: 100, filepath: file ?? d.filepath, autoRetries: 0 });
     } catch (e) {
@@ -86,6 +97,7 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
       stopping.delete(id);
       const msg = String(e);
       if (reason === "paused") patch(id, { status: "paused" });
+      else if (reason === "requeued") patch(id, { status: "queued" });
       else if (reason === "cancelled") {
         patch(id, { status: "cancelled", percent: null });
         await deletePartials(d.dir, d.videoId).catch(() => 0);
@@ -187,7 +199,21 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
       );
     },
 
-    admit: () => pump(),
+    admit: () => {
+      // Over the limit (it was lowered): the newest running downloads go back to the queue, keeping their progress.
+      const running = get().items.filter((d) => d.status === "running");
+      const extra = running.length - getSettings().concurrency;
+      if (extra > 0) {
+        stop(
+          running
+            .sort((a, b) => b.createdAt - a.createdAt)
+            .slice(0, extra)
+            .map((d) => d.id),
+          "requeued",
+        );
+      }
+      pump();
+    },
 
     resumeAll: () => {
       set({ held: false });
@@ -246,3 +272,8 @@ function postprocessName(pp: string, formatLabel: string): string {
   if (pp === "ExtractAudio") return `Converting to ${formatLabel.split(" ")[0]}`;
   return POSTPROCESSORS[pp] ?? "Processing";
 }
+
+// "Downloads at a time" applies at once, wherever it is changed.
+useSettings.subscribe((st, prev) => {
+  if (st.settings.concurrency !== prev.settings.concurrency) useDownloads.getState().admit();
+});

@@ -24,6 +24,7 @@ pub fn show_main_window(app: &AppHandle) {
         let _ = w.show();
         let _ = w.set_focus();
     }
+    crate::blur::ensure(app);
 }
 
 pub fn build(app: &AppHandle) -> tauri::Result<Tray> {

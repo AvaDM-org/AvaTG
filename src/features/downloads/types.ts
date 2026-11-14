@@ -1,5 +1,7 @@
 // A download "recipe" as stored in SQLite (db.rs keeps it as a JSON document).
-// Re-running `args` against `url` resumes the download from yt-dlp's own .part files.
+// The yt-dlp command is built from it each time the download starts (so it follows the current settings);
+// running it again resumes from yt-dlp's own .part files.
+import type { Preset } from "../../lib/presets";
 
 export type DownloadStatus = "queued" | "running" | "paused" | "interrupted" | "done" | "failed" | "cancelled";
 
@@ -16,8 +18,16 @@ export interface DownloadRecord {
   audioOnly: boolean;
   /** Format column text, e.g. "MP4 · 1080p" */
   formatLabel: string;
-  args: string[];
-  /** folder the file lands in (download folder plus any playlist folder) */
+  preset: Preset;
+  /** Records saved before 2026-11-15 kept the finished command instead of the preset. */
+  args?: string[];
+  /** download folder chosen when it was added */
+  outputDir: string;
+  /** playlist subfolder, if any */
+  folder: string | null;
+  /** 1-based playlist position used as a "001 - " prefix, if any */
+  index: number | null;
+  /** folder the file lands in (outputDir plus folder); used to find partial files */
   dir: string;
   saveDescription: boolean;
   status: DownloadStatus;

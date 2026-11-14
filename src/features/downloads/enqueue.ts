@@ -1,7 +1,7 @@
 // Turns what the user picked (videos, playlists) into download recipes and queues them.
-import { buildArgs, formatLabel, safeName, type Preset } from "../../lib/presets";
+import { formatLabel, safeName, type Preset } from "../../lib/presets";
 import { playlistEntries, type Entry } from "../../lib/youtube";
-import { downloadOptions, getSettings } from "../settings/store";
+import { getSettings } from "../settings/store";
 import { useDownloads } from "./store";
 import type { DownloadRecord } from "./types";
 
@@ -42,7 +42,6 @@ export function queueVideos(
   { outputDir, folder = null, positions }: QueueOptions = {},
 ) {
   const settings = getSettings();
-  const opts = downloadOptions(settings);
   const base = outputDir || settings.outputDir;
   const dir = folder ? `${base}/${safeName(folder)}` : base;
   const now = Date.now();
@@ -57,7 +56,10 @@ export function queueVideos(
     thumbnail: v.thumbnail,
     audioOnly: preset.mode === "audio",
     formatLabel: formatLabel(preset),
-    args: buildArgs(preset, { outputDir: base, subfolder: folder, index: positions?.[i] ?? null }, opts),
+    preset,
+    outputDir: base,
+    folder,
+    index: positions?.[i] ?? null,
     dir,
     saveDescription: preset.description,
     status: "queued",
