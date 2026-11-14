@@ -1,6 +1,6 @@
 // A playlist, a channel (Videos / Shorts / Playlists tabs) or several pasted links: pick items, then download.
 // Selection works like a file manager: click, Shift+click for a range, the tri-state box, All / None / Invert.
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DragSpace, TopBar } from "../../components/layout";
 import { WindowControls } from "../../components/WindowControls";
 import { Button, Checkbox, Field, IconButton, Switch, TextField } from "../../components/ui/controls";
@@ -45,6 +45,15 @@ export function CollectionPage({ info, statusBar }: { info: PlaylistInfo | Chann
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const lastClicked = useRef<number | null>(null);
+
+  // Esc goes back to the downloads list (unless a menu or text field has it).
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !(e.target as HTMLElement).closest("input, [role=menu]") && !busy) close();
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [close, busy]);
 
   const tab = tabs.find((t) => t.id === tabId) ?? tabs[0];
   const entries = useMemo(() => tab?.entries ?? [], [tab]);
@@ -306,9 +315,14 @@ export function CollectionPage({ info, statusBar }: { info: PlaylistInfo | Chann
               {parts.length ? parts.join(" and ") : "Nothing selected"}
               {totalSecs > 0 ? ` · about ${fmtTotalLength(totalSecs)}` : ""}
             </small>
-            <Button variant="primary" disabled={!picked.length || !!busy} onClick={download}>
-              {busy ?? (picked.length ? `Download ${parts.join(" + ")}` : "Select something to download")}
-            </Button>
+            <div className={s.footButtons}>
+              <Button onClick={close} disabled={!!busy} title="Esc">
+                Cancel
+              </Button>
+              <Button variant="primary" disabled={!picked.length || !!busy} onClick={download}>
+                {busy ?? (picked.length ? `Download ${parts.join(" + ")}` : "Select something to download")}
+              </Button>
+            </div>
           </div>
         </aside>
       </div>

@@ -361,6 +361,10 @@
   background: var(--menu);
   box-shadow: var(--shadow-dialog);
 }
+.dialogHead,
+.dialogFoot {
+  flex-shrink: 0;
+}
 .dialogHead {
   display: flex;
   align-items: flex-start;
@@ -374,6 +378,9 @@
   font-weight: 700;
 }
 .dialogBody {
+  /* min-height 0 lets the body shrink and scroll when the window is short */
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 20px 24px;
   overflow-y: auto;
   display: flex;

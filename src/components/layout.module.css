@@ -135,3 +135,62 @@
   margin: 0;
   color: var(--fg2);
 }
+
+/* Invisible resize grips around the frameless window (ResizeGrips.tsx). Above everything but tiny. */
+.grip {
+  position: absolute;
+  z-index: 100;
+}
+.gripN,
+.gripS {
+  left: 12px;
+  right: 12px;
+  height: 6px;
+  cursor: ns-resize;
+}
+.gripN {
+  top: 0;
+}
+.gripS {
+  bottom: 0;
+}
+.gripW,
+.gripE {
+  top: 12px;
+  bottom: 12px;
+  width: 6px;
+  cursor: ew-resize;
+}
+.gripW {
+  left: 0;
+}
+.gripE {
+  right: 0;
+}
+.gripNW,
+.gripNE,
+.gripSW,
+.gripSE {
+  width: 14px;
+  height: 14px;
+}
+.gripNW {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+.gripSE {
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
+}
+.gripNE {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+.gripSW {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}

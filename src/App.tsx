@@ -4,6 +4,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { useEffect, useState } from "react";
 import { DropOverlay, useDropLinks } from "./components/DropOverlay";
+import { ResizeGrips } from "./components/ResizeGrips";
 import { layoutStyles } from "./components/layout";
 import { toast, Toasts } from "./components/Toasts";
 import { DownloadsPage, DownloadsStatusBar } from "./features/downloads/DownloadsPage";
@@ -106,6 +107,7 @@ export default function App() {
       {video && <VideoDialog info={video} />}
       {drop.state && <DropOverlay state={drop.state} />}
       <Toasts />
+      <ResizeGrips />
     </div>
   );
 }
