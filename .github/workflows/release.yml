@@ -1,0 +1,99 @@
+name: Release
+# Like AvaDM: push a version tag to build every platform into one DRAFT release; check it, then publish it by hand.
+#   git tag v1.2.3 && git push origin v1.2.3        (pre-release: v1.2.3-rc.1)
+# The tag must match the version in tauri.conf.json, Cargo.toml and package.json, and CHANGELOG.md needs its section.
+# Installers are signed for the updater with the TAURI_SIGNING_PRIVATE_KEY(_PASSWORD) secrets; latest.json is the
+# update feed the app reads (src-tauri/src/updater.rs).
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+permissions:
+  contents: write
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.release.outputs.id }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        run: bash .github/scripts/release-version.sh "$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+      - name: Tag matches the app version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          for v in "$(jq -r .version src-tauri/tauri.conf.json)" "$(jq -r .version package.json)" \
+                   "$(grep -m1 '^version' src-tauri/Cargo.toml | cut -d'"' -f2)"; do
+            [ "$v" = "$VERSION" ] || { echo "::error::Tag $GITHUB_REF_NAME but the app version is $v"; exit 1; }
+          done
+      - name: Release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          grep -qE "^## \[${VERSION}\]" CHANGELOG.md || { echo "::error::No '## [${VERSION}]' in CHANGELOG.md"; exit 1; }
+          awk -v ver="$VERSION" '$0 ~ "^## \\[" ver "\\]" {f=1; next} f && /^## / {exit} f {print}' CHANGELOG.md > notes.md
+      - id: release
+        name: Create the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" -f tag_name="$GITHUB_REF_NAME" -f name="AvaTG $GITHUB_REF_NAME" \
+            -F draft=true -F prerelease="$PRERELEASE" -F body=@notes.md --jq .id)
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            args: --bundles deb,rpm,appimage
+          - platform: windows-latest
+            args: --bundles nsis
+          - platform: macos-latest
+            args: --target aarch64-apple-darwin
+          - platform: macos-latest
+            args: --target x86_64-apple-darwin
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Linux build dependencies
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev libxdo-dev libwayland-dev patchelf
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ startsWith(matrix.platform, 'macos') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: bun install --frozen-lockfile
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          releaseId: ${{ needs.version.outputs.release_id }}
+          tauriScript: bun run tauri
+          args: ${{ matrix.args }}
+          updaterJsonPreferNsis: true
+
+  checksums:
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: SHA256SUMS.txt for every asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --dir assets
+          (cd assets && sha256sum * > ../SHA256SUMS.txt)
+          gh release upload "$GITHUB_REF_NAME" SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber
