@@ -1,7 +1,7 @@
 // App settings. Saved to SQLite one key at a time; every change applies immediately (no Save button).
 import { downloadDir } from "@tauri-apps/api/path";
 import { create } from "zustand";
-import { loadSettings, saveSetting, setCloseToTray } from "../../ipc";
+import { loadSettings, saveSetting, setCloseToTray, setProxy, systemProxy } from "../../ipc";
 import { DEFAULT_PRESET, type DownloadOptions, type Preset, type SubtitleMode } from "../../lib/presets";
 
 export interface Settings {
@@ -20,6 +20,9 @@ export interface Settings {
   retries: number;
   socketTimeout: number;
   autoResume: number;
+  /** "system": the desktop's proxy setting; "custom": `proxyUrl`; "none": connect directly */
+  proxyMode: "system" | "custom" | "none";
+  proxyUrl: string;
   // Files
   subtitleMode: SubtitleMode;
   autoCaptions: boolean;
@@ -47,6 +50,8 @@ export const DEFAULTS: Settings = {
   retries: 10,
   socketTimeout: 20,
   autoResume: 3,
+  proxyMode: "system",
+  proxyUrl: "",
   subtitleMode: "embed",
   autoCaptions: true,
   subLangs: ["en"],
@@ -74,9 +79,17 @@ const MAX_TRANSPARENCY = navigator.userAgent.includes("Linux") ? 0.12 : 0.4;
 const applyGlass = (glass: number) =>
   document.documentElement.style.setProperty("--glass-alpha", String(1 - MAX_TRANSPARENCY * (glass / 100)));
 
-function applySideEffects<K extends keyof Settings>(key: K, value: Settings[K]) {
+/** Tell Rust which proxy yt-dlp and tool downloads use. */
+export async function applyProxy(s: Pick<Settings, "proxyMode" | "proxyUrl">) {
+  if (s.proxyMode === "none") return setProxy("");
+  if (s.proxyMode === "custom") return setProxy(s.proxyUrl.trim() || null);
+  return setProxy(await systemProxy().catch(() => null));
+}
+
+function applySideEffects<K extends keyof Settings>(key: K, value: Settings[K], all: Settings) {
   if (key === "glass") applyGlass(value as number);
   if (key === "closeToTray") void setCloseToTray(value as boolean);
+  if (key === "proxyMode" || key === "proxyUrl") void applyProxy(all);
 }
 
 export const useSettings = create<SettingsStore>((set, get) => ({
@@ -92,11 +105,13 @@ export const useSettings = create<SettingsStore>((set, get) => ({
     set({ settings, loaded: true });
     applyGlass(settings.glass);
     void setCloseToTray(settings.closeToTray);
+    await applyProxy(settings);
   },
 
   set: (key, value) => {
-    set({ settings: { ...get().settings, [key]: value } });
-    applySideEffects(key, value);
+    const settings = { ...get().settings, [key]: value };
+    set({ settings });
+    applySideEffects(key, value, settings);
     void saveSetting(key, value);
   },
 }));

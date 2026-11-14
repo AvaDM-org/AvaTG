@@ -3,6 +3,7 @@
 
 mod db;
 mod files;
+mod proxy;
 mod tools;
 mod tray;
 mod ytdlp;
@@ -28,6 +29,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(ytdlp::Jobs::default())
+        .manage(proxy::ProxyState::default())
         .manage(tray::CloseToTray(AtomicBool::new(true)))
         .setup(|app| {
             let handle = app.handle();
@@ -75,6 +77,8 @@ pub fn run() {
             files::rename_description,
             tray::tray_update,
             tray::set_close_to_tray,
+            proxy::set_proxy,
+            proxy::system_proxy,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

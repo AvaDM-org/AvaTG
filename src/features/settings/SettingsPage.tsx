@@ -13,7 +13,7 @@ import { WindowControls } from "../../components/WindowControls";
 import { Button, IconButton, Segmented, Stepper, Switch, TextField } from "../../components/ui/controls";
 import { Icon } from "../../components/ui/Icon";
 import { Dropdown, MenuItem } from "../../components/ui/Menu";
-import { toolsDir } from "../../ipc";
+import { systemProxy, toolsDir } from "../../ipc";
 import { ToolsSettings } from "../tools/ToolsPanel";
 import { chooseFolder } from "./chooseFolder";
 import { Row, Section } from "./rows";
@@ -180,6 +180,10 @@ function DownloadsSettings() {
   const [timeout, setTimeout_] = useSetting("socketTimeout");
   const [autoResume, setAutoResume] = useSetting("autoResume");
   const [mbpsText, setMbpsText] = useState(String(mbps));
+  const [proxyMode, setProxyMode] = useSetting("proxyMode");
+  const [proxyUrl, setProxyUrl] = useSetting("proxyUrl");
+  const [detected, setDetected] = useState<string | null | undefined>(undefined);
+  useEffect(() => void systemProxy().then(setDetected, () => setDetected(null)), []);
 
   return (
     <>
@@ -225,6 +229,44 @@ function DownloadsSettings() {
           />
           <Switch label="Limit each download" checked={limitOn} onChange={setLimitOn} />
         </Row>
+      </Section>
+      <Section heading="NETWORK">
+        <Row
+          title="Proxy"
+          desc={
+            proxyMode === "system"
+              ? detected
+                ? `Using the system proxy: ${detected}`
+                : detected === null
+                  ? "No system proxy is set, so TubeGrab connects directly"
+                  : "Reading the system proxy…"
+              : proxyMode === "custom"
+                ? "For example http://127.0.0.1:10809 or socks5://127.0.0.1:1080"
+                : "Connects directly, even when the system has a proxy"
+          }
+        >
+          <Segmented
+            label="Proxy"
+            value={proxyMode}
+            onChange={setProxyMode}
+            options={[
+              { value: "system", label: "System" },
+              { value: "custom", label: "Custom" },
+              { value: "none", label: "None" },
+            ]}
+          />
+        </Row>
+        {proxyMode === "custom" && (
+          <Row title="Proxy address" desc="Used by yt-dlp and when downloading the tools">
+            <TextField
+              label="Proxy address"
+              placeholder="http://127.0.0.1:10809"
+              value={proxyUrl}
+              onChange={setProxyUrl}
+              width={280}
+            />
+          </Row>
+        )}
       </Section>
       <Section heading="RELIABILITY">
         <Row title="Retry attempts" desc="For dropped connections and server errors">

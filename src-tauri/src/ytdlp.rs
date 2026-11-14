@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::process::Stdio;
 use std::sync::Mutex;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::io::{AsyncBufReadExt, AsyncRead, BufReader};
 use tokio::process::Command;
 use tokio::sync::oneshot;
@@ -48,6 +48,9 @@ fn ytdlp_command(app: &AppHandle, cookies_browser: &Option<String>) -> Result<Co
         .arg(&bin)
         .arg("--js-runtimes")
         .arg(format!("deno:{}", deno.to_string_lossy()));
+    if let Some(proxy) = app.state::<crate::proxy::ProxyState>().get() {
+        cmd.arg("--proxy").arg(proxy);
+    }
     if let Some(b) = cookies_browser.as_deref().filter(|b| !b.is_empty()) {
         cmd.arg("--cookies-from-browser").arg(b);
     }

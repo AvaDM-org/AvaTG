@@ -129,16 +129,31 @@ fn ffmpeg_sources() -> Result<Vec<(String, Vec<&'static str>)>, String> {
     ])
 }
 
-fn http() -> Result<reqwest::Client, String> {
-    reqwest::Client::builder()
-        .user_agent(concat!("tubegrab/", env!("CARGO_PKG_VERSION")))
-        .connect_timeout(Duration::from_secs(20))
+/// An HTTP client that uses TubeGrab's proxy setting. `read_timeout` fails a download that stalls for 30 s
+/// instead of letting it hang forever.
+fn http(app: &AppHandle) -> Result<reqwest::Client, String> {
+    client_builder(app)?
+        .read_timeout(Duration::from_secs(30))
         .build()
         .map_err(|e| e.to_string())
 }
 
+fn client_builder(app: &AppHandle) -> Result<reqwest::ClientBuilder, String> {
+    let mut b = reqwest::Client::builder()
+        .user_agent(concat!("tubegrab/", env!("CARGO_PKG_VERSION")))
+        .connect_timeout(Duration::from_secs(20));
+    match app.state::<crate::proxy::ProxyState>().get().as_deref() {
+        Some("") => b = b.no_proxy(),
+        Some(url) => {
+            b = b.proxy(reqwest::Proxy::all(url).map_err(|e| format!("Bad proxy {url}: {e}"))?)
+        }
+        None => {}
+    }
+    Ok(b)
+}
+
 async fn download(app: &AppHandle, id: &str, url: &str, dest: &Path) -> Result<(), String> {
-    let resp = http()?
+    let resp = http(app)?
         .get(url)
         .send()
         .await
@@ -150,7 +165,13 @@ async fn download(app: &AppHandle, id: &str, url: &str, dest: &Path) -> Result<(
     let mut downloaded: u64 = 0;
     let mut last_emit: u64 = 0;
     while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| format!("Download interrupted: {e}"))?;
+        let chunk = chunk.map_err(|e| {
+            if e.is_timeout() {
+                "The download stopped receiving data for 30 seconds. Check the connection or the proxy in Settings › Downloads.".to_string()
+            } else {
+                format!("Download interrupted: {e}")
+            }
+        })?;
         file.write_all(&chunk).map_err(|e| e.to_string())?;
         downloaded += chunk.len() as u64;
         if downloaded - last_emit > 512 * 1024 {
@@ -330,9 +351,9 @@ fn emit_stage(app: &AppHandle, id: &str, stage: &str) {
 }
 
 /// Latest release tag, read from the `releases/latest` redirect (no GitHub API rate limit).
-async fn latest_tag(repo: &str) -> Option<String> {
-    let client = reqwest::Client::builder()
-        .user_agent(concat!("tubegrab/", env!("CARGO_PKG_VERSION")))
+async fn latest_tag(app: &AppHandle, repo: &str) -> Option<String> {
+    let client = client_builder(app)
+        .ok()?
         .redirect(reqwest::redirect::Policy::none())
         .build()
         .ok()?;
@@ -347,8 +368,11 @@ async fn latest_tag(repo: &str) -> Option<String> {
 }
 
 #[tauri::command]
-pub async fn latest_versions() -> LatestVersions {
-    let (ytdlp, deno) = tokio::join!(latest_tag("yt-dlp/yt-dlp"), latest_tag("denoland/deno"));
+pub async fn latest_versions(app: AppHandle) -> LatestVersions {
+    let (ytdlp, deno) = tokio::join!(
+        latest_tag(&app, "yt-dlp/yt-dlp"),
+        latest_tag(&app, "denoland/deno")
+    );
     LatestVersions { ytdlp, deno }
 }
 
