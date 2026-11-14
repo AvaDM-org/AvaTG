@@ -109,6 +109,11 @@ Collected from AvaDM's git history and CHANGELOG. Each needs a TubeGrab equivale
   URL (http, https, socks5), or none. Used by yt-dlp (`--proxy`) and by the tools download.
 - Window glass (2026-11-14): real blur like AvaDM. Windows/macOS via `window-vibrancy`; KDE via KWin's
   `org_kde_kwin_blur` Wayland protocol (native Wayland, X11 property as fallback); solid fallback elsewhere.
+- Brand and themes (2026-11-15, designed on the canvas, not built yet): the app is renamed **AvaTG**. Logo = AvaDM's
+  mark recoloured to cherry (`#B0153A`). New default theme **Cherry dark** (accent `#EF4765`, dark text on it);
+  **Dark glass** stays as a built-in theme. Theming like AvaDM: one JSON file of colour tokens per theme in AvaDM's
+  format (`#AARRGGBB`, so AvaDM themes import as they are), built-ins inside the app, imported ones in a themes
+  folder, theme cards plus "Import theme…" in Settings › Appearance (which comes back, with the glass slider).
 - Download records (2026-11-14): keep one **"recipe" per download in SQLite** (link, format choice, folder, status),
   like AvaDM. yt-dlp's own `.part` files do the byte-level resuming; Resume re-runs the same command. No AvaDM-style
   working files.
