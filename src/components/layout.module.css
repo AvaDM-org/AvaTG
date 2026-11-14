@@ -51,6 +51,14 @@
 .chip:hover {
   color: var(--fg);
 }
+.chipWarn {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.chipWarn:hover {
+  color: var(--warn);
+  background: var(--hover);
+}
 .chipOn {
   border-color: var(--accent);
   background: var(--sel);

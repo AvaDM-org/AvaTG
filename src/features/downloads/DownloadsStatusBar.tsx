@@ -1,6 +1,6 @@
 // The status bar under the downloads list (and the playlist page): total speed, Pause all / Resume all,
 // downloads at a time, and counts.
-import { StatusBar, StatusChip } from "../../components/layout";
+import { layoutStyles, StatusBar, StatusChip } from "../../components/layout";
 import { Icon } from "../../components/ui/Icon";
 import { Dropdown, MenuItem } from "../../components/ui/Menu";
 import { fmtSpeed } from "../../lib/format";
@@ -21,13 +21,14 @@ export function DownloadsStatusBar({
   visibleCount?: number;
   filtered?: boolean;
 }) {
-  const { items, live, held, pauseAll, resumeAll } = useDownloads();
+  const { items, live, held, pauseAll, resumeAll, resume } = useDownloads();
   const { settings, set } = useSettings();
   const speed = Object.values(live).reduce((t, l) => t + (l.speed ?? 0), 0);
   const n = (st: DownloadStatus) => items.filter((d) => d.status === st).length;
   const running = n("running");
   const waiting = n("queued");
-  const resumable = n("paused") + n("interrupted");
+  const interrupted = items.filter((d) => d.status === "interrupted");
+  const resumable = n("paused") + interrupted.length;
   const showResume = held || (running === 0 && resumable > 0);
 
   const parts = [
@@ -62,6 +63,16 @@ export function DownloadsStatusBar({
             Pause all
           </StatusChip>
         )
+      )}
+      {interrupted.length > 0 && !held && (
+        <StatusChip
+          className={layoutStyles.chipWarn}
+          onClick={() => resume(interrupted.map((d) => d.id))}
+          title="These were running when AvaTG closed. Resume them from where they stopped"
+        >
+          <Icon name="alert" size={11} strokeWidth={2.2} />
+          {interrupted.length} interrupted · Resume
+        </StatusChip>
       )}
       <Dropdown
         label="Downloads at a time"
