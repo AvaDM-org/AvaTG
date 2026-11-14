@@ -6,15 +6,17 @@ import {
   enable as enableAutostart,
   isEnabled as autostartEnabled,
 } from "@tauri-apps/plugin-autostart";
-import { openPath } from "@tauri-apps/plugin-opener";
+import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import { useEffect, useState } from "react";
 import { toastError } from "../../components/Toasts";
 import { WindowControls } from "../../components/WindowControls";
-import { Button, IconButton, Segmented, Stepper, Switch, TextField } from "../../components/ui/controls";
+import { Button, IconButton, ProgressBar, Segmented, Stepper, Switch, TextField } from "../../components/ui/controls";
 import { Icon } from "../../components/ui/Icon";
 import { Dropdown, MenuItem } from "../../components/ui/Menu";
 import { systemProxy, toolsDir } from "../../ipc";
+import { fmtBytes } from "../../lib/format";
 import { ToolsSettings } from "../tools/ToolsPanel";
+import { useUpdates } from "../updates/store";
 import { chooseFolder } from "./chooseFolder";
 import { Row, Section } from "./rows";
 import { hasBlur, useSettings, type Settings } from "./store";
@@ -28,7 +30,7 @@ const PAGES: { id: PageId; label: string; desc: string }[] = [
   { id: "files", label: "Files", desc: "What is saved with each video." },
   { id: "tools", label: "Tools", desc: "Free programs AvaTG uses to download and convert." },
   { id: "storage", label: "Storage", desc: "Where AvaTG keeps its own files." },
-  { id: "about", label: "About", desc: "" },
+  { id: "about", label: "About & updates", desc: "" },
 ];
 
 const BROWSERS = [
@@ -43,8 +45,10 @@ const BROWSERS = [
   ["safari", "Safari"],
 ];
 
-export function SettingsPage({ onBack }: { onBack: () => void }) {
-  const [page, setPage] = useState<PageId>("general");
+export type SettingsPageId = PageId;
+
+export function SettingsPage({ onBack, initialPage = "general" }: { onBack: () => void; initialPage?: PageId }) {
+  const [page, setPage] = useState<PageId>(initialPage);
   const [version, setVersion] = useState("");
   const current = PAGES.find((p) => p.id === page) ?? PAGES[0];
   useEffect(() => void getVersion().then(setVersion), []);
@@ -410,11 +414,95 @@ function StoragePage() {
 }
 
 function AboutPage({ version }: { version: string }) {
+  const [checkOnLaunch, setCheckOnLaunch] = useSetting("checkUpdates");
+  const [pre, setPre] = useSetting("includePrereleases");
+  const { status, info, channel, check, error } = useUpdates();
   return (
-    <Section heading="AVATG">
-      <Row title="Version" desc="Updates for AvaTG itself are not built yet; the tools update from Settings > Tools">
-        <span style={{ fontWeight: 600 }}>{version}</span>
-      </Row>
-    </Section>
+    <>
+      <UpdateCard />
+      <Section heading="UPDATES">
+        <Row title="Check for updates on launch" desc="Quietly; you are told when a new version is out">
+          <Switch label="Check for updates on launch" checked={checkOnLaunch} onChange={setCheckOnLaunch} />
+        </Row>
+        <Row title="Include pre-release versions" desc="Try new versions before they are final">
+          <Switch
+            label="Include pre-release versions"
+            checked={pre}
+            onChange={(v) => {
+              setPre(v);
+              void check();
+            }}
+          />
+        </Row>
+        <Row
+          title="Check now"
+          desc={
+            status === "checking"
+              ? "Checking…"
+              : status === "upToDate"
+                ? `AvaTG ${version} is the newest version`
+                : status === "failed" && !info
+                  ? (error ?? "The check failed")
+                  : channel === "package"
+                    ? "Installed with your package manager; updates come from the release page"
+                    : `AvaTG ${version}`
+          }
+          descTone={status === "failed" && !info ? "bad" : status === "upToDate" ? "ok" : undefined}
+        >
+          <Button disabled={status === "checking" || status === "downloading"} onClick={() => void check()}>
+            Check now
+          </Button>
+        </Row>
+      </Section>
+      <Section heading="AVATG">
+        <Row title="Project page" desc="Source, issues and releases on GitHub">
+          <Button onClick={() => void openUrl("https://github.com/AvaDM-org/AvaTG").catch(toastError)}>
+            Open GitHub
+          </Button>
+        </Row>
+      </Section>
+    </>
+  );
+}
+
+/** The update card (AvaDM DESIGN.md section 6): only while there is an update to show. */
+function UpdateCard() {
+  const { status, info, channel, downloaded, total, error, install } = useUpdates();
+  if (!info || status === "upToDate" || status === "checking") return null;
+  const busy = status === "downloading" || status === "installing";
+  const pct = total ? (downloaded / total) * 100 : null;
+  const line =
+    status === "downloading"
+      ? `${fmtBytes(downloaded)}${total ? ` of ${fmtBytes(total)}` : ""}`
+      : status === "installing"
+        ? "Installing; AvaTG restarts in a moment"
+        : status === "failed"
+          ? (error ?? "The update failed")
+          : `You have ${info.current}${info.prerelease ? " · this is a pre-release" : ""}`;
+  return (
+    <div className={s.card}>
+      <div className={s.cardHead}>
+        <div className={s.cardIcon}>
+          <Icon name="download" size={20} strokeWidth={2} />
+        </div>
+        <div className={s.rowText}>
+          <b>
+            {busy ? "Updating to" : "AvaTG"} {info.version}
+            {busy ? "" : " is available"}
+          </b>
+          <small className={`tnum ${status === "failed" ? s.bad : ""}`}>{line}</small>
+        </div>
+        {channel === "package" ? (
+          <Button variant="primary" onClick={() => void openUrl(info.releasePage).catch(toastError)}>
+            Open release page
+          </Button>
+        ) : (
+          <Button variant="primary" disabled={busy} onClick={() => void install()}>
+            {status === "failed" ? "Try again" : "Update now"}
+          </Button>
+        )}
+      </div>
+      {busy && <ProgressBar percent={status === "installing" ? null : pct} height={8} />}
+    </div>
   );
 }

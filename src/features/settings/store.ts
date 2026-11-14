@@ -32,6 +32,9 @@ export interface Settings {
   numberFiles: boolean;
   /** "" = no cookies, else a browser for --cookies-from-browser */
   cookiesBrowser: string;
+  // About & updates
+  checkUpdates: boolean;
+  includePrereleases: boolean;
   // Tools
   checkToolUpdates: boolean;
   /** where each tool comes from: automatic (system if good, else AvaTG's), AvaTG's copy, or a custom file */
@@ -61,6 +64,8 @@ export const DEFAULTS: Settings = {
   playlistFolder: true,
   numberFiles: true,
   cookiesBrowser: "",
+  checkUpdates: true,
+  includePrereleases: false,
   checkToolUpdates: true,
   toolSources: {
     ytdlp: { source: "auto", customPath: "" },

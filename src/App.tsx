@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { DropOverlay, useDropLinks } from "./components/DropOverlay";
 import { ResizeGrips } from "./components/ResizeGrips";
 import { layoutStyles } from "./components/layout";
-import { toast, Toasts } from "./components/Toasts";
+import { toast, Toasts, useToasts } from "./components/Toasts";
 import { DownloadsPage, DownloadsStatusBar } from "./features/downloads/DownloadsPage";
 import { useDownloads } from "./features/downloads/store";
 import { useTraySync } from "./features/downloads/useTraySync";
@@ -14,10 +14,12 @@ import { AddLinkDialog } from "./features/picker/AddLinkDialog";
 import { CollectionPage } from "./features/picker/CollectionPage";
 import { usePicker } from "./features/picker/store";
 import { VideoDialog } from "./features/picker/VideoDialog";
-import { SettingsPage } from "./features/settings/SettingsPage";
+import { SettingsPage, type SettingsPageId } from "./features/settings/SettingsPage";
 import { useSettings } from "./features/settings/store";
 import { SetupScreen } from "./features/tools/SetupScreen";
 import { useTools } from "./features/tools/store";
+import { useUpdates } from "./features/updates/store";
+import { getSettings } from "./features/settings/store";
 import { onTrayAction } from "./ipc";
 import { extractLinks } from "./lib/links";
 
@@ -26,6 +28,7 @@ type Page = "downloads" | "settings";
 export default function App() {
   const [ready, setReady] = useState<"loading" | "setup" | "ready">("loading");
   const [page, setPage] = useState<Page>("downloads");
+  const [settingsPage, setSettingsPage] = useState<SettingsPageId>("general");
   const picker = usePicker((st) => st.state);
   const openLinks = usePicker((st) => st.open);
   const drop = useDropLinks((links) => void openLinks(links));
@@ -40,6 +43,20 @@ export default function App() {
         .catch(() => false);
       await useDownloads.getState().load();
       setReady(toolsReady ? "ready" : "setup");
+      // Like AvaDM: a quiet check on launch; a notice with "Update now" when a new version is out.
+      if (getSettings().checkUpdates) {
+        const info = await useUpdates.getState().check();
+        if (info) {
+          useToasts.getState().show(`AvaTG ${info.version} is available`, false, {
+            label: useUpdates.getState().channel === "package" ? "See what's new" : "Update now",
+            run: () => {
+              setSettingsPage("about");
+              setPage("settings");
+              if (useUpdates.getState().channel === "auto") void useUpdates.getState().install();
+            },
+          });
+        }
+      }
     })();
   }, []);
 
@@ -90,7 +107,13 @@ export default function App() {
         (collection ? (
           <CollectionPage info={collection} statusBar={<DownloadsStatusBar />} />
         ) : page === "settings" ? (
-          <SettingsPage onBack={() => setPage("downloads")} />
+          <SettingsPage key={settingsPage}
+            initialPage={settingsPage}
+            onBack={() => {
+              setPage("downloads");
+              setSettingsPage("general");
+            }}
+          />
         ) : (
           <DownloadsPage
             onOpenSettings={() => setPage("settings")}

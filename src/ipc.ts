@@ -86,6 +86,23 @@ export const windowBlur = () => invoke<boolean>("window_blur");
 export const onWindowBlur = (cb: (granted: boolean) => void): Promise<UnlistenFn> =>
   listen<boolean>("window-blur", (e) => cb(e.payload));
 
+// updater.rs
+export interface UpdateInfo {
+  version: string;
+  current: string;
+  notes: string | null;
+  prerelease: boolean;
+  releasePage: string;
+}
+/** "auto": AvaTG can update itself; "package": installed by a package manager (.deb/.rpm), open the release page. */
+export const installChannel = () => invoke<"auto" | "package">("install_channel");
+export const updateCheck = (includePrereleases: boolean) =>
+  invoke<UpdateInfo | null>("update_check", { includePrereleases });
+/** Downloads, installs and restarts AvaTG. */
+export const updateInstall = () => invoke<void>("update_install");
+export const onUpdateProgress = (cb: (p: { downloaded: number; total: number | null }) => void): Promise<UnlistenFn> =>
+  listen<{ downloaded: number; total: number | null }>("update-progress", (e) => cb(e.payload));
+
 // tray.rs
 export const updateTray = (tooltip: string, allPaused: boolean) => invoke<void>("tray_update", { tooltip, allPaused });
 export const setCloseToTray = (enabled: boolean) => invoke<void>("set_close_to_tray", { enabled });

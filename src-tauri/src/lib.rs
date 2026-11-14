@@ -7,6 +7,7 @@ mod files;
 mod proxy;
 mod tools;
 mod tray;
+mod updater;
 mod ytdlp;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -27,12 +28,14 @@ pub fn run() {
             Some(vec![MINIMIZED_ARG]),
         ))
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(ytdlp::Jobs::default())
         .manage(proxy::ProxyState::default())
         .manage(tools::ToolPaths::default())
         .manage(blur::BlurState::default())
+        .manage(updater::PendingUpdate::default())
         .manage(tray::CloseToTray(AtomicBool::new(true)))
         .setup(|app| {
             let handle = app.handle();
@@ -86,6 +89,9 @@ pub fn run() {
             proxy::set_proxy,
             proxy::system_proxy,
             blur::window_blur,
+            updater::install_channel,
+            updater::update_check,
+            updater::update_install,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
