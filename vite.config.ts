@@ -16,7 +16,8 @@ export default defineConfig(() => ({
   server: {
     port: 1420,
     strictPort: true,
-    host: host || false,
+    // Pin IPv4: Vite may bind only ::1 for "localhost", while WebKitGTK connects to 127.0.0.1 (blank window).
+    host: host || "127.0.0.1",
     hmr: host
       ? {
           protocol: "ws",

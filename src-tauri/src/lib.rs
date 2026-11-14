@@ -36,6 +36,11 @@ pub fn run() {
             if !std::env::args().any(|a| a == MINIMIZED_ARG) {
                 tray::show_main_window(handle);
             }
+            // Debug builds open the web inspector so frontend errors are visible.
+            #[cfg(debug_assertions)]
+            if let Some(w) = app.get_webview_window("main") {
+                w.open_devtools();
+            }
             Ok(())
         })
         .on_window_event(|window, event| {

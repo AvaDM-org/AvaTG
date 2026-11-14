@@ -1,8 +1,8 @@
 /* AvaDM "Dark glass" tokens (see AvaDM docs/DESIGN.md section 3). The only theme.
    Views use these variables; no raw colors, sizes or radii in components. */
 :root {
-  /* --glass-alpha is set from Settings > General > Glass effect (0% solid, 100% full glass). */
-  --glass-alpha: 0.68;
+  /* --glass-alpha is set from Settings > General > Glass effect; this default only shows before settings load. */
+  --glass-alpha: 0.92;
   --glass: rgb(16 21 28 / var(--glass-alpha));
   --edge: rgb(255 255 255 / 0.1);
   --fg: #eef3f6;

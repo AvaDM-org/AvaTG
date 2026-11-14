@@ -64,9 +64,15 @@ interface SettingsStore {
   set: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
 }
 
-/** Window background alpha: from the solid fallback (1.0) to the theme's glass (0.6). */
+/**
+ * How see-through the window may get at 100% glass. Linux webviews get no blur behind the window, so the
+ * background must stay readable without it (AvaDM DESIGN.md: glass is never required for readability).
+ */
+const MAX_TRANSPARENCY = navigator.userAgent.includes("Linux") ? 0.12 : 0.4;
+
+/** Window background alpha: from solid (1.0) at 0% to the most see-through allowed at 100%. */
 const applyGlass = (glass: number) =>
-  document.documentElement.style.setProperty("--glass-alpha", String(1 - 0.4 * (glass / 100)));
+  document.documentElement.style.setProperty("--glass-alpha", String(1 - MAX_TRANSPARENCY * (glass / 100)));
 
 function applySideEffects<K extends keyof Settings>(key: K, value: Settings[K]) {
   if (key === "glass") applyGlass(value as number);
