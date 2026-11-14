@@ -32,11 +32,12 @@ export default function App() {
   useEffect(() => {
     void (async () => {
       await useSettings.getState().load();
-      await useDownloads.getState().load();
+      // Tool paths first: downloads resumed on launch must run with the chosen yt-dlp, Deno and FFmpeg.
       const toolsReady = await useTools
         .getState()
         .refresh()
         .catch(() => false);
+      await useDownloads.getState().load();
       setReady(toolsReady ? "ready" : "setup");
     })();
   }, []);
