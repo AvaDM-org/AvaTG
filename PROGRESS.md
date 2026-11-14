@@ -91,6 +91,15 @@ Collected from AvaDM's git history and CHANGELOG. Each needs a TubeGrab equivale
   - Pause all / Resume all (also to be added to AvaDM later): a status-bar chip and a tray menu item. Pause all
     pauses running downloads and **holds waiting ones: nothing new starts until Resume all**. Resume all also resumes
     interrupted downloads.
+- Tools (2026-11-14): FFmpeg is **not bundled**. Each tool (yt-dlp, Deno, FFmpeg) can come from TubeGrab's own
+  downloaded copy, a copy installed on the system (found automatically), or a custom file the user picks. A version
+  map decides what is accepted (Deno ≥ 2.3, FFmpeg ≥ 5, yt-dlp warned when older than ~90 days); the downloaded copy
+  is the fallback.
+- Proxy (2026-11-14): YouTube is unreachable on the owner's network without a proxy. Settings > Downloads > Network:
+  use the system proxy (default; KDE, GNOME, Windows, macOS settings or proxy environment variables), a custom proxy
+  URL (http, https, socks5), or none. Used by yt-dlp (`--proxy`) and by the tools download.
+- Window glass (2026-11-14): real blur like AvaDM. Windows/macOS via `window-vibrancy`; KDE via KWin's
+  `org_kde_kwin_blur` Wayland protocol (native Wayland, X11 property as fallback); solid fallback elsewhere.
 - Download records (2026-11-14): keep one **"recipe" per download in SQLite** (link, format choice, folder, status),
   like AvaDM. yt-dlp's own `.part` files do the byte-level resuming; Resume re-runs the same command. No AvaDM-style
   working files.
