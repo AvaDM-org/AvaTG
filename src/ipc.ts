@@ -31,7 +31,7 @@ export interface LatestVersions {
 /** A line of yt-dlp output, parsed in ytdlp.rs. */
 export interface DownloadEvent {
   id: string;
-  kind: "progress" | "postprocess" | "file";
+  kind: "progress" | "postprocess" | "file" | "log";
   status?: string;
   downloaded?: number;
   total?: number;
@@ -39,7 +39,12 @@ export interface DownloadEvent {
   eta?: number;
   postprocessor?: string;
   filepath?: string;
+  /** "log": one line of yt-dlp's output and how serious it is */
+  message?: string;
+  level?: LogLevel;
 }
+
+export type LogLevel = "info" | "warning" | "error";
 
 export type TrayAction = "pauseAll" | "paste";
 

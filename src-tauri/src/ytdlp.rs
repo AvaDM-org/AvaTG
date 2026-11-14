@@ -96,7 +96,7 @@ pub async fn ytdlp_json(
 #[serde(rename_all = "camelCase")]
 struct DownloadEvent {
     id: String,
-    /// "progress" | "postprocess" | "file"
+    /// "progress" | "postprocess" | "file" | "log"
     kind: String,
     status: Option<String>,
     downloaded: Option<f64>,
@@ -105,6 +105,10 @@ struct DownloadEvent {
     eta: Option<f64>,
     postprocessor: Option<String>,
     filepath: Option<String>,
+    /// for "log": one line of yt-dlp's output
+    message: Option<String>,
+    /// for "log": "info" | "warning" | "error"
+    level: Option<String>,
 }
 
 fn num(s: &str) -> Option<f64> {
@@ -147,7 +151,24 @@ fn parse_line(id: &str, line: &str) -> Option<DownloadEvent> {
             ..base
         });
     }
-    None
+    Some(log_event(base, line))
+}
+
+/// Any other line of output, for the download's log.
+fn log_event(base: DownloadEvent, line: &str) -> DownloadEvent {
+    let level = if line.starts_with("ERROR") {
+        "error"
+    } else if line.starts_with("WARNING") {
+        "warning"
+    } else {
+        "info"
+    };
+    DownloadEvent {
+        kind: "log".into(),
+        message: Some(line.to_string()),
+        level: Some(level.into()),
+        ..base
+    }
 }
 
 async fn read_lines<R: AsyncRead + Unpin>(r: R, mut f: impl FnMut(String)) {
@@ -184,8 +205,8 @@ pub async fn run_download(
 ) -> Result<Option<String>, String> {
     let mut cmd = ytdlp_command(&app, &cookies_browser)?;
     cmd.args([
-        "--quiet",
-        "--no-warnings",
+        // --print implies --quiet; the log lines (and warnings, on stderr) are wanted for the download's log.
+        "--no-quiet",
         "--progress",
         "--newline",
         "--no-simulate",
@@ -227,9 +248,16 @@ pub async fn run_download(
         .await;
         filepath
     });
+    let app3 = app.clone();
+    let id3 = id.clone();
     let err_task = tokio::spawn(async move {
         let mut text = String::new();
         read_lines(stderr, |line| {
+            let base = DownloadEvent {
+                id: id3.clone(),
+                ..Default::default()
+            };
+            let _ = app3.emit("download-progress", log_event(base, &line));
             text.push_str(&line);
             text.push('\n');
         })
@@ -278,5 +306,33 @@ async fn kill_tree(child: &mut tokio::process::Child, pid: Option<u32>) {
 pub fn cancel_download(jobs: State<'_, Jobs>, id: String) {
     if let Some(tx) = jobs.0.lock().unwrap().remove(&id) {
         let _ = tx.send(());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_progress_files_and_log_lines() {
+        let p = parse_line("d1", "TGP|downloading|100|NA|400|50.5|6").unwrap();
+        assert_eq!(p.kind, "progress");
+        assert_eq!(p.total, Some(400.0));
+        assert_eq!(p.speed, Some(50.5));
+
+        let f = parse_line("d1", "TGF|/videos/Clip.mp4").unwrap();
+        assert_eq!(f.filepath.as_deref(), Some("/videos/Clip.mp4"));
+
+        let w = parse_line(
+            "d1",
+            "WARNING: [youtube] Falling back to generic n function",
+        )
+        .unwrap();
+        assert_eq!(
+            (w.kind.as_str(), w.level.as_deref()),
+            ("log", Some("warning"))
+        );
+        let i = parse_line("d1", "[info] abc: Downloading 1 format(s): 22").unwrap();
+        assert_eq!(i.level.as_deref(), Some("info"));
     }
 }

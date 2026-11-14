@@ -17,6 +17,7 @@ import {
 import { buildArgs } from "../../lib/presets";
 import { downloadOptions, getSettings, useSettings } from "../settings/store";
 import { RunClock } from "./history";
+import { toastWarning, useDownloadLogs } from "./logs";
 import type { DownloadRecord, LiveProgress } from "./types";
 
 /** What happens when a stopped yt-dlp process ends. "requeued": over the downloads-at-a-time limit. */
@@ -105,6 +106,7 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
     if (!d) return;
     const now = Date.now();
     clocks.set(id, new RunClock(now));
+    useDownloadLogs.getState().add(id, { at: now, level: "info", text: "Started" });
     patch(id, { status: "running", error: null, startedAt: now });
     setLive(id, { part: 0, phase: "Starting", speed: null, eta: null });
     try {
@@ -217,6 +219,7 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
       stop(ids, "removed");
       set((st) => ({ items: st.items.filter((d) => !ids.includes(d.id)) }));
       void deleteDownloads(ids);
+      useDownloadLogs.getState().forget(ids);
       // Unfinished files are useless once a download is off the list; finished files only go with "Delete files".
       gone.forEach(cleanUp);
       if (withFiles) void deleteFiles(gone.flatMap((d) => (d.filepath ? [d.filepath] : [])));
@@ -264,6 +267,11 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
     if (!d) return;
     const live: LiveProgress = get().live[ev.id] ?? EMPTY_LIVE;
     const clock = clocks.get(ev.id);
+    if (ev.kind === "log" && ev.message) {
+      useDownloadLogs.getState().add(ev.id, { at: Date.now(), level: ev.level ?? "info", text: ev.message });
+      if (ev.level === "warning") toastWarning(d.title, ev.message);
+      return;
+    }
     if (ev.kind === "progress") {
       if (ev.status === "finished") {
         clock?.idle(Date.now());
