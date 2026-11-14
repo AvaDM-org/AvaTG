@@ -86,6 +86,10 @@ Collected from AvaDM's git history and CHANGELOG. Each needs a TubeGrab equivale
     files, or both.
   - Description: an option to save it as a **`.txt` file next to the video**.
   - Speed limit: **per download** only (`--limit-rate`); yt-dlp has no shared total limit.
+  - Settings pages: General (with the glass slider as a row, no Appearance page), Downloads, Files, Tools, Storage,
+    About & updates. Defaults: **1 download at a time**, 4 parts per download, 10 retries, 20 s stall timeout,
+    3 automatic resumes, description file off.
+  - Pause all / Resume all: wanted (also to be added to AvaDM later). Placement proposed on the canvas, not decided.
 - Download records (2026-11-14): keep one **"recipe" per download in SQLite** (link, format choice, folder, status),
   like AvaDM. yt-dlp's own `.part` files do the byte-level resuming; Resume re-runs the same command. No AvaDM-style
   working files.
