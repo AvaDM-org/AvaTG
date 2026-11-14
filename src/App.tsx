@@ -16,7 +16,8 @@ import { VideoDialog } from "./features/picker/VideoDialog";
 import { SettingsPage } from "./features/settings/SettingsPage";
 import { useSettings } from "./features/settings/store";
 import { SetupScreen } from "./features/tools/SetupScreen";
-import { onTrayAction, toolsStatus } from "./ipc";
+import { useTools } from "./features/tools/store";
+import { onTrayAction } from "./ipc";
 import { extractLinks } from "./lib/links";
 
 type Page = "downloads" | "settings";
@@ -32,8 +33,11 @@ export default function App() {
     void (async () => {
       await useSettings.getState().load();
       await useDownloads.getState().load();
-      const tools = await toolsStatus().catch(() => []);
-      setReady(tools.length && tools.every((t) => t.installed) ? "ready" : "setup");
+      const toolsReady = await useTools
+        .getState()
+        .refresh()
+        .catch(() => false);
+      setReady(toolsReady ? "ready" : "setup");
     })();
   }, []);
 

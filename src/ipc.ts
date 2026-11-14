@@ -2,13 +2,18 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
-export type ToolId = "ytdlp" | "deno" | "ffmpeg";
+import type { ToolId } from "./lib/toolVersions";
+export type { ToolId };
 
 export interface ToolInfo {
   id: ToolId;
   name: string;
+  /** TubeGrab's own downloaded copy */
   installed: boolean;
   version: string | null;
+  appPath: string;
+  /** a copy found on the system PATH */
+  system: { path: string; version: string | null } | null;
 }
 
 export interface ToolProgress {
@@ -43,6 +48,9 @@ export const toolsStatus = () => invoke<ToolInfo[]>("tools_status");
 export const installTool = (id: ToolId) => invoke<ToolInfo>("install_tool", { id });
 export const latestVersions = () => invoke<LatestVersions>("latest_versions");
 export const toolsDir = () => invoke<string>("open_bin_dir");
+export const toolVersion = (id: ToolId, path: string) => invoke<string | null>("tool_version", { id, path });
+/** The executable to run for each tool; tools left out use TubeGrab's own copy. */
+export const setToolPaths = (paths: Partial<Record<ToolId, string>>) => invoke<void>("set_tool_paths", { paths });
 
 // ytdlp.rs
 /** Raw yt-dlp JSON; lib/youtube.ts reads it. */

@@ -12,7 +12,7 @@ use tokio::io::{AsyncBufReadExt, AsyncRead, BufReader};
 use tokio::process::Command;
 use tokio::sync::oneshot;
 
-use crate::tools::{bin_dir, tool_path};
+use crate::tools::resolved_path;
 
 /// Running downloads: job id -> cancel signal.
 #[derive(Default)]
@@ -32,20 +32,20 @@ pub fn hidden_command<S: AsRef<OsStr>>(program: S) -> Command {
 }
 
 fn ytdlp_command(app: &AppHandle, cookies_browser: &Option<String>) -> Result<Command, String> {
-    let ytdlp = tool_path(app, "yt-dlp")?;
+    let ytdlp = resolved_path(app, "ytdlp", "yt-dlp")?;
     if !ytdlp.exists() {
         return Err("yt-dlp is not installed. Open Settings → Tools.".into());
     }
-    let deno = tool_path(app, "deno")?;
-    let bin = bin_dir(app)?;
+    let deno = resolved_path(app, "deno", "deno")?;
+    // yt-dlp finds ffprobe next to the ffmpeg it is given.
+    let ffmpeg = resolved_path(app, "ffmpeg", "ffmpeg")?;
     let mut cmd = hidden_command(&ytdlp);
     // Keep Deno's cache inside TubeGrab's data folder instead of the user's ~/.cache/deno.
-    if let Some(data_dir) = bin.parent() {
-        cmd.env("DENO_DIR", data_dir.join("deno-cache"));
-    }
+    let data_dir = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
+    cmd.env("DENO_DIR", data_dir.join("deno-cache"));
     cmd.arg("--ignore-config")
         .arg("--ffmpeg-location")
-        .arg(&bin)
+        .arg(&ffmpeg)
         .arg("--js-runtimes")
         .arg(format!("deno:{}", deno.to_string_lossy()));
     if let Some(proxy) = app.state::<crate::proxy::ProxyState>().get() {

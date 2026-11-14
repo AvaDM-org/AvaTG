@@ -25,8 +25,44 @@ pub struct ToolInfo {
     /// "ytdlp" | "deno" | "ffmpeg"
     pub id: String,
     pub name: String,
+    /// TubeGrab's own downloaded copy
     pub installed: bool,
     pub version: Option<String>,
+    pub app_path: String,
+    /// A copy installed on the system (found on PATH)
+    pub system: Option<ToolCopy>,
+}
+
+/// The executable each tool runs from, chosen by the frontend (system, custom or TubeGrab's copy).
+/// Empty until the frontend sets it; then TubeGrab's own copy is used.
+#[derive(Default)]
+pub struct ToolPaths(pub std::sync::Mutex<std::collections::HashMap<String, PathBuf>>);
+
+#[tauri::command]
+pub fn set_tool_paths(
+    state: tauri::State<'_, ToolPaths>,
+    paths: std::collections::HashMap<String, String>,
+) {
+    if let Ok(mut map) = state.0.lock() {
+        *map = paths
+            .into_iter()
+            .map(|(k, v)| (k, PathBuf::from(v)))
+            .collect();
+    }
+}
+
+/// The executable to run for a tool: the chosen path, else TubeGrab's own copy.
+pub fn resolved_path(app: &AppHandle, id: &str, exe: &str) -> Result<PathBuf, String> {
+    let chosen = app
+        .state::<ToolPaths>()
+        .0
+        .lock()
+        .ok()
+        .and_then(|m| m.get(id).cloned());
+    match chosen {
+        Some(p) => Ok(p),
+        None => tool_path(app, exe),
+    }
 }
 
 #[derive(Serialize, Clone)]
@@ -241,58 +277,87 @@ fn finalize(tmp: &Path, dest: &Path) -> Result<(), String> {
     std::fs::rename(tmp, dest).map_err(|e| e.to_string())
 }
 
-async fn run_version(path: &Path, arg: &str) -> Option<String> {
-    if !path.exists() {
+/// The version a tool reports, or None when the file is missing or does not run.
+pub async fn version_of(id: &str, path: &Path) -> Option<String> {
+    if !path.is_file() {
         return None;
     }
+    let arg = if id == "ffmpeg" {
+        "-version"
+    } else {
+        "--version"
+    };
     let out = hidden_command(path).arg(arg).output().await.ok()?;
-    let text = String::from_utf8_lossy(&out.stdout).to_string();
-    text.lines().next().map(|l| l.trim().to_string())
+    let line = String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .next()?
+        .trim()
+        .to_string();
+    Some(match id {
+        // "deno 2.9.8 (stable, release, x86_64-pc-windows-msvc)"
+        "deno" => line.split_whitespace().nth(1).unwrap_or(&line).to_string(),
+        // "ffmpeg version 9.0.2 Copyright ..." (git builds: "N-118000-g1234abcd")
+        "ffmpeg" => line.split_whitespace().nth(2).unwrap_or(&line).to_string(),
+        _ => line,
+    })
+}
+
+const TOOLS: [(&str, &str, &str); 3] = [
+    ("ytdlp", "yt-dlp", "yt-dlp"),
+    ("deno", "Deno", "deno"),
+    ("ffmpeg", "FFmpeg", "ffmpeg"),
+];
+
+/// The first `exe` on PATH (system-installed copy).
+fn find_on_path(exe: &str) -> Option<PathBuf> {
+    let name = format!("{exe}{EXE}");
+    std::env::split_paths(&std::env::var_os("PATH")?)
+        .map(|dir| dir.join(&name))
+        .find(|p| p.is_file())
+}
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ToolCopy {
+    pub path: String,
+    pub version: Option<String>,
+}
+
+async fn copy_at(id: &str, path: PathBuf) -> ToolCopy {
+    let version = version_of(id, &path).await;
+    ToolCopy {
+        path: path.to_string_lossy().into_owned(),
+        version,
+    }
 }
 
 async fn info_for(app: &AppHandle, id: &str) -> Result<ToolInfo, String> {
-    let info = match id {
-        "ytdlp" => {
-            let p = tool_path(app, "yt-dlp")?;
-            let v = run_version(&p, "--version").await;
-            ToolInfo {
-                id: id.into(),
-                name: "yt-dlp".into(),
-                installed: v.is_some(),
-                version: v,
-            }
-        }
-        "deno" => {
-            let p = tool_path(app, "deno")?;
-            // "deno 2.9.8 (stable, release, x86_64-pc-windows-msvc)"
-            let v = run_version(&p, "--version")
-                .await
-                .map(|l| l.split_whitespace().nth(1).unwrap_or(&l).to_string());
-            ToolInfo {
-                id: id.into(),
-                name: "Deno (JS runtime)".into(),
-                installed: v.is_some(),
-                version: v,
-            }
-        }
-        "ffmpeg" => {
-            let ff = tool_path(app, "ffmpeg")?;
-            let fp = tool_path(app, "ffprobe")?;
-            // "ffmpeg version 9.0.2 Copyright ..."
-            let v = run_version(&ff, "-version")
-                .await
-                .map(|l| l.split_whitespace().nth(2).unwrap_or(&l).to_string());
-            let installed = v.is_some() && fp.exists();
-            ToolInfo {
-                id: id.into(),
-                name: "ffmpeg + ffprobe".into(),
-                installed,
-                version: v,
-            }
-        }
-        _ => return Err(format!("Unknown tool {id}")),
+    let (_, name, exe) = TOOLS
+        .iter()
+        .find(|t| t.0 == id)
+        .ok_or_else(|| format!("Unknown tool {id}"))?;
+    let own = copy_at(id, tool_path(app, exe)?).await;
+    // FFmpeg also needs ffprobe next to it.
+    let own_complete = id != "ffmpeg" || tool_path(app, "ffprobe")?.is_file();
+    let system = match find_on_path(exe) {
+        // Our own bin folder is never on PATH, so anything found here is the user's.
+        Some(p) => Some(copy_at(id, p).await),
+        None => None,
     };
-    Ok(info)
+    Ok(ToolInfo {
+        id: id.into(),
+        name: (*name).into(),
+        installed: own.version.is_some() && own_complete,
+        version: own.version.clone(),
+        app_path: own.path,
+        system,
+    })
+}
+
+/// The version of a tool at a path the user picked (Settings > Tools > Custom file).
+#[tauri::command]
+pub async fn tool_version(id: String, path: String) -> Option<String> {
+    version_of(&id, Path::new(&path)).await
 }
 
 #[tauri::command]

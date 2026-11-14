@@ -1,15 +1,18 @@
-// First run: TubeGrab downloads its tools once into its own folder (no installer, no admin rights).
+// First run: use the tools already on the system when their versions are good, download only what is missing
+// into TubeGrab's own folder (no installer, no admin rights).
 import { DragSpace, TopBar } from "../../components/layout";
 import { WindowControls } from "../../components/WindowControls";
 import { Button } from "../../components/ui/controls";
 import { Row, Section } from "../settings/rows";
 import s from "../settings/settings.module.css";
-import { InstallCard, useTools } from "./ToolsPanel";
+import { useTools } from "./store";
+import { InstallCard, useInstaller } from "./ToolsPanel";
 
 export function SetupScreen({ onReady }: { onReady: () => void }) {
-  const { tools, progress, busy, error, install } = useTools();
-  const missing = tools.filter((t) => !t.installed).map((t) => t.id);
-  const busyTool = tools.find((t) => t.id === busy);
+  const { infos, resolved } = useTools();
+  const { progress, busy, error, install } = useInstaller();
+  const missing = infos.filter((t) => !resolved[t.id]?.check.ok).map((t) => t.id);
+  const busyTool = infos.find((t) => t.id === busy);
 
   return (
     <>
@@ -22,19 +25,29 @@ export function SetupScreen({ onReady }: { onReady: () => void }) {
         <h1>One-time setup</h1>
         <p className={s.intro} style={{ margin: 0 }}>
           TubeGrab uses three free programs: yt-dlp (the downloader), Deno (runs YouTube's player code for yt-dlp) and
-          FFmpeg (joins video and audio, converts formats). They are downloaded once from their official releases, about
-          150 to 250 MB, into TubeGrab's own folder. Settings › Tools updates them later.
+          FFmpeg (joins video and audio, converts formats). Copies already on your system are used when their versions
+          are good; the rest are downloaded once from their official releases into TubeGrab's own folder. If YouTube is
+          blocked where you are, set a proxy in Settings › Downloads first.
         </p>
         {busyTool && <InstallCard tool={busyTool} progress={progress} />}
         <Section heading="TOOLS">
-          {tools.map((t) => (
-            <Row
-              key={t.id}
-              title={t.name}
-              desc={t.installed ? `${t.version} · Installed` : "Not installed yet"}
-              descTone={t.installed ? "ok" : undefined}
-            />
-          ))}
+          {infos.map((t) => {
+            const r = resolved[t.id];
+            return (
+              <Row
+                key={t.id}
+                title={t.name}
+                desc={
+                  r?.check.ok
+                    ? `${r.from === "system" ? "Found on your system" : "Installed"} · ${r.version}`
+                    : r?.path
+                      ? `${r.version ?? "?"} · ${r.check.note} · will download a newer copy`
+                      : "Will be downloaded"
+                }
+                descTone={r?.check.ok ? "ok" : undefined}
+              />
+            );
+          })}
         </Section>
         {error && <p className={s.bad}>{error}</p>}
         <div>
@@ -44,7 +57,7 @@ export function SetupScreen({ onReady }: { onReady: () => void }) {
             disabled={!!busy || !missing.length}
             onClick={async () => (await install(missing)) && onReady()}
           >
-            {busy ? "Downloading…" : "Download tools"}
+            {busy ? "Downloading…" : `Download ${missing.length === 1 ? "the missing tool" : "missing tools"}`}
           </Button>
         </div>
       </div>

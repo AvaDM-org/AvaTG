@@ -30,6 +30,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .manage(ytdlp::Jobs::default())
         .manage(proxy::ProxyState::default())
+        .manage(tools::ToolPaths::default())
         .manage(tray::CloseToTray(AtomicBool::new(true)))
         .setup(|app| {
             let handle = app.handle();
@@ -64,6 +65,8 @@ pub fn run() {
             tools::install_tool,
             tools::latest_versions,
             tools::open_bin_dir,
+            tools::tool_version,
+            tools::set_tool_paths,
             ytdlp::ytdlp_json,
             ytdlp::run_download,
             ytdlp::cancel_download,

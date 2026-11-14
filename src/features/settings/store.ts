@@ -3,6 +3,7 @@ import { downloadDir } from "@tauri-apps/api/path";
 import { create } from "zustand";
 import { loadSettings, saveSetting, setCloseToTray, setProxy, systemProxy } from "../../ipc";
 import { DEFAULT_PRESET, type DownloadOptions, type Preset, type SubtitleMode } from "../../lib/presets";
+import type { ToolChoice, ToolId } from "../../lib/toolVersions";
 
 export interface Settings {
   // General
@@ -33,6 +34,8 @@ export interface Settings {
   cookiesBrowser: string;
   // Tools
   checkToolUpdates: boolean;
+  /** where each tool comes from: automatic (system if good, else TubeGrab's), TubeGrab's copy, or a custom file */
+  toolSources: Record<ToolId, ToolChoice>;
   /** the last choices made in a picker, used as the starting point next time */
   preset: Preset;
 }
@@ -59,6 +62,11 @@ export const DEFAULTS: Settings = {
   numberFiles: true,
   cookiesBrowser: "",
   checkToolUpdates: true,
+  toolSources: {
+    ytdlp: { source: "auto", customPath: "" },
+    deno: { source: "auto", customPath: "" },
+    ffmpeg: { source: "auto", customPath: "" },
+  },
   preset: DEFAULT_PRESET,
 };
 
