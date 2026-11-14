@@ -19,6 +19,36 @@ Code: https://github.com/AvaDM-org/AvaTG (public, branch `main`). The local fold
    right-click › Open the first time).
 3. The "Not built yet" items below, in whatever order the owner picks.
 
+## Feature port (2026-11-15)
+
+The owner picked these from AvaDM's `docs/FEATURES.md` (queues, schedules, speed limits and AvaDM's own engine are
+out). Work through them in this order, design first, one commit each, **commit locally only (no push, no tag)**.
+Code must stay easy to move into a Tauri port of AvaDM: generic pieces go in `src/components` or `src/lib` with no
+download-specific knowledge; feature code in `src/features/downloads`.
+
+Owner answers (2026-11-15): duplicates offer **Skip / Rename / Replace** (Skip is the default, one choice covers a
+whole batch); visible columns **Name, Format, Size, Status, Speed, Added**, hidden by default Channel, Duration,
+Took, Avg speed, Folder; the **detail panel opens on selection** and stays closed once closed (remembered) until
+reopened; columns **reorder, resize and hide like Dolphin/Explorer**.
+
+| # | Item | Status |
+|---|---|---|
+| 1 | DB backup before each schema migration (`avatg.db.bak-v<N>`, `VACUUM INTO`) | done |
+| 2 | Dev-only demo mode: the frontend runs in a normal browser with mocked IPC (`?demo`), one row per status, fake progress; a `?gallery` page of every control. Never in release builds | todo |
+| 3 | Generic table: column defs, drag to reorder, resize grips, header right-click menu (show/hide, reset), horizontal scroll, sort by header (arrow, click again reverses). Layout, sort and filters saved | todo |
+| 4 | Virtualized rows (own fixed-height hook, no dependency): long channel lists stay fast | todo |
+| 5 | Type filter (All / Video / Audio, live counts) and new columns: Added, Channel, Duration, Took, Avg speed, Folder | todo |
+| 6 | History stats: started/finished time, time running and time transferring summed across resumes; "Took" and "Average speed"; the real file size once finished | todo |
+| 7 | yt-dlp output per download (warnings no longer hidden): a log kept in memory, WARNING lines as toasts (once per message) | todo |
+| 8 | Detail panel: General / Format / Log tabs, action column, selection summary for several rows | todo |
+| 9 | "N interrupted · Resume" status-bar chip | todo |
+| 10 | Import links from a file (Add link › Import list: From clipboard / From file…), dropping `.list/.lst/.url` too | todo |
+| 11 | Free disk space under Save to (one shared folder field for the video dialog and the playlist page) | todo |
+| 12 | Already downloaded / already in the list: inline warning with Skip / Rename / Replace | todo |
+| 13 | Contrast test for built-in themes (Fg2/Fg3 ≥ 4.5:1) | todo |
+| 14 | Linux: applications-menu entry for the AppImage, AppImage-safe autostart path, self-repair at startup | todo |
+| 15 | Windows: the uninstaller removes the login entry (NSIS hook) | todo |
+
 ## How to work
 
 - `bun run tauri dev` runs the app; `bun run check` = tsc, eslint, vitest, rustfmt, clippy -D warnings, cargo test.

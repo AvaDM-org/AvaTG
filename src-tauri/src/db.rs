@@ -19,6 +19,7 @@ impl Db {
             std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
         }
         let conn = Connection::open(path).map_err(|e| e.to_string())?;
+        backup_before_migration(&conn, path, SCHEMA_VERSION).map_err(|e| e.to_string())?;
         migrate(&conn).map_err(|e| e.to_string())?;
         Ok(Self(Mutex::new(conn)))
     }
@@ -30,6 +31,21 @@ impl Db {
             .map_err(|_| "database lock poisoned".to_string())?;
         f(&conn).map_err(|e| e.to_string())
     }
+}
+
+/// Before a database from an older AvaTG is migrated, keep a copy of it as `avatg.db.bak-v<old version>`.
+/// `VACUUM INTO` writes a consistent copy that includes anything still in the WAL file.
+fn backup_before_migration(conn: &Connection, path: &Path, target: i32) -> rusqlite::Result<()> {
+    let version: i32 = conn.pragma_query_value(None, "user_version", |r| r.get(0))?;
+    if version == 0 || version >= target {
+        return Ok(());
+    }
+    let mut name = path.as_os_str().to_owned();
+    name.push(format!(".bak-v{version}"));
+    let backup = std::path::PathBuf::from(name);
+    let _ = std::fs::remove_file(&backup); // VACUUM INTO refuses an existing file
+    conn.execute("VACUUM INTO ?1", [backup.to_string_lossy()])
+        .map(|_| ())
 }
 
 fn migrate(conn: &Connection) -> rusqlite::Result<()> {
@@ -153,5 +169,32 @@ mod tests {
         assert_eq!(v, SCHEMA_VERSION);
         // Running it again must be a no-op.
         migrate(&conn).unwrap();
+    }
+
+    #[test]
+    fn backs_up_only_older_databases() {
+        let dir = std::env::temp_dir().join(format!("avatg-db-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("avatg.db");
+        let backup = dir.join(format!("avatg.db.bak-v{SCHEMA_VERSION}"));
+        let conn = Connection::open(&path).unwrap();
+        migrate(&conn).unwrap();
+        conn.execute("INSERT INTO settings VALUES ('k', '1')", [])
+            .unwrap();
+
+        // Already at the target version, or a brand-new file: nothing to back up.
+        backup_before_migration(&conn, &path, SCHEMA_VERSION).unwrap();
+        assert!(!backup.exists());
+
+        // A migration to the next version copies the database first, with its data.
+        backup_before_migration(&conn, &path, SCHEMA_VERSION + 1).unwrap();
+        let copy = Connection::open(&backup).unwrap();
+        let n: i32 = copy
+            .query_row("SELECT count(*) FROM settings", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(n, 1);
+
+        drop((conn, copy));
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }
