@@ -47,7 +47,7 @@ reopened; columns **reorder, resize and hide like Dolphin/Explorer**.
 | 12 | Already downloaded / already in the list: inline warning with Skip / Rename / Replace | done (channel Playlists tab not checked: those videos are only known after expanding) |
 | 13 | Contrast test for built-in themes (Fg2/Fg3 ≥ 4.5:1) | done (Fg2/Fg3 on every surface: window, panels, bars, selection, hover, fields) |
 | 14 | Linux: applications-menu entry for the AppImage, AppImage-safe autostart path, self-repair at startup | done, not tried with a real AppImage yet |
-| 15 | Windows: the uninstaller removes the login entry (NSIS hook) | todo |
+| 15 | Windows: the uninstaller removes the login entry (NSIS hook) | nothing to add: Tauri's NSIS uninstaller already deletes `HKCU\…\Run` "AvaTG" (the name tauri-plugin-autostart uses, productName) and skips it during updates (checked against tauri-bundler's installer.nsi, 2026-11-16) |
 | 16 | Theme builder in Settings › Appearance: pick each colour with a live preview that shows where it is used; it writes the theme's JSON file as you edit. Theme cards get Edit, Duplicate, Export, Import (owner request, 2026-11-15) | todo |
 
 ## How to work
