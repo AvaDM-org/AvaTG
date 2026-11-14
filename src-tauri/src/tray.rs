@@ -1,7 +1,7 @@
-//! Tray icon and its menu. TubeGrab lives in the tray: closing the window hides it and downloads keep running.
+//! Tray icon and its menu. AvaTG lives in the tray: closing the window hides it and downloads keep running.
 //!
 //! The menu sends its actions to the frontend as a `tray-action` event (`"pauseAll"`, `"paste"`), because the
-//! download queue lives there. "Open TubeGrab" is the first item since some Linux desktops never report a
+//! download queue lives there. "Open AvaTG" is the first item since some Linux desktops never report a
 //! click on the icon itself.
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -28,15 +28,15 @@ pub fn show_main_window(app: &AppHandle) {
 }
 
 pub fn build(app: &AppHandle) -> tauri::Result<Tray> {
-    let open = MenuItem::with_id(app, "open", "Open TubeGrab", true, None::<&str>)?;
+    let open = MenuItem::with_id(app, "open", "Open AvaTG", true, None::<&str>)?;
     let pause = MenuItem::with_id(app, "pauseAll", "Pause all", true, None::<&str>)?;
     let paste = MenuItem::with_id(app, "paste", "Add link from clipboard", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit TubeGrab", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit AvaTG", true, None::<&str>)?;
     let sep = || PredefinedMenuItem::separator(app);
     let menu = Menu::with_items(app, &[&open, &sep()?, &pause, &paste, &sep()?, &quit])?;
 
     let mut builder = TrayIconBuilder::with_id(TRAY_ID)
-        .tooltip("TubeGrab")
+        .tooltip("AvaTG")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {

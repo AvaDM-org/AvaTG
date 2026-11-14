@@ -1,4 +1,4 @@
-# TubeGrab: notes for agents
+# AvaTG: notes for agents
 
 - Read `README.md` (architecture, tool sources) and `PROGRESS.md` (status, next steps) first. Update
   `PROGRESS.md` and commit after each item.

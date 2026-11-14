@@ -23,11 +23,11 @@ import s from "./settings.module.css";
 type PageId = "general" | "downloads" | "files" | "tools" | "storage" | "about";
 
 const PAGES: { id: PageId; label: string; desc: string }[] = [
-  { id: "general", label: "General", desc: "How TubeGrab starts, closes and looks." },
+  { id: "general", label: "General", desc: "How AvaTG starts, closes and looks." },
   { id: "downloads", label: "Downloads", desc: "Where files go and how fast they arrive." },
   { id: "files", label: "Files", desc: "What is saved with each video." },
-  { id: "tools", label: "Tools", desc: "Free programs TubeGrab uses to download and convert." },
-  { id: "storage", label: "Storage", desc: "Where TubeGrab keeps its own files." },
+  { id: "tools", label: "Tools", desc: "Free programs AvaTG uses to download and convert." },
+  { id: "storage", label: "Storage", desc: "Where AvaTG keeps its own files." },
   { id: "about", label: "About", desc: "" },
 ];
 
@@ -74,7 +74,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
             {p.label}
           </button>
         ))}
-        <div className={s.navFoot}>TubeGrab {version}</div>
+        <div className={s.navFoot}>AvaTG {version}</div>
       </nav>
       <div className={s.main}>
         <div className={s.titlebar} data-tauri-drag-region>
@@ -125,7 +125,7 @@ function GeneralPage() {
         <Row title="Launch when I log in" desc="Starts hidden in the tray, ready for downloads">
           <Switch label="Launch when I log in" checked={autostart} onChange={(v) => void toggleAutostart(v)} />
         </Row>
-        <Row title="Resume unfinished downloads" desc="Continue downloads that were running when TubeGrab closed">
+        <Row title="Resume unfinished downloads" desc="Continue downloads that were running when AvaTG closed">
           <Switch label="Resume unfinished downloads" checked={resume} onChange={setResume} />
         </Row>
       </Section>
@@ -137,7 +137,7 @@ function GeneralPage() {
             onChange={setToTray}
             options={[
               { value: true, label: "Minimize to tray" },
-              { value: false, label: "Quit TubeGrab" },
+              { value: false, label: "Quit AvaTG" },
             ]}
           />
         </Row>
@@ -245,7 +245,7 @@ function DownloadsSettings() {
               ? detected
                 ? `Using the system proxy: ${detected}`
                 : detected === null
-                  ? "No system proxy is set, so TubeGrab connects directly"
+                  ? "No system proxy is set, so AvaTG connects directly"
                   : "Reading the system proxy…"
               : proxyMode === "custom"
                 ? "For example http://127.0.0.1:10809 or socks5://127.0.0.1:1080"
@@ -397,7 +397,7 @@ function StoragePage() {
   const open = (dir: string) => openPath(dir).catch(toastError);
   return (
     <Section heading="FOLDERS">
-      <Row title="Download history" desc="The list of downloads and how to resume them (tubegrab.db)">
+      <Row title="Download history" desc="The list of downloads and how to resume them (avatg.db)">
         <TextField label="Download history folder" value={data} readOnly width={300} />
         <Button onClick={() => void open(data)}>Open folder</Button>
       </Row>
@@ -411,8 +411,8 @@ function StoragePage() {
 
 function AboutPage({ version }: { version: string }) {
   return (
-    <Section heading="TUBEGRAB">
-      <Row title="Version" desc="Updates for TubeGrab itself are not built yet; the tools update from Settings > Tools">
+    <Section heading="AVATG">
+      <Row title="Version" desc="Updates for AvaTG itself are not built yet; the tools update from Settings > Tools">
         <span style={{ fontWeight: 600 }}>{version}</span>
       </Row>
     </Section>

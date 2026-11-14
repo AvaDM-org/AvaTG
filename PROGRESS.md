@@ -8,7 +8,7 @@ cargo test) passes.
 
 ### Architecture (approved 2026-11-14)
 - Rust (`src-tauri/src`): `ytdlp.rs` runs yt-dlp, `tools.rs` installs the tools, `db.rs` stores download recipes and
-  settings in SQLite (`<app data>/tubegrab.db`, JSON document per download), `files.rs` deletes partial files and
+  settings in SQLite (`<app data>/avatg.db`, JSON document per download), `files.rs` deletes partial files and
   renames the description to `.txt`, `tray.rs` is the tray menu and close-to-tray. Errors are `String`s.
 - Frontend (`src`): `ipc.ts` is every command and event; `lib/` is pure logic with tests (presets → yt-dlp args,
   link parsing, formatting, yt-dlp JSON); `features/{downloads,picker,settings,tools}` hold each feature's store,
@@ -36,7 +36,7 @@ cargo test) passes.
   on click) went away after dropping the `WEBKIT_DISABLE_DMABUF_RENDERER` override.
 
 - File names are `Title.ext` (`001 - Title.ext` in numbered playlists), no `[id]`. Unfinished files live in a
-  per-download working folder `<download folder>/.tubegrab-parts/<download id>/` (`--paths temp:`); Cancel,
+  per-download working folder `<download folder>/.avatg-parts/<download id>/` (`--paths temp:`); Cancel,
   Remove and finishing delete it. Checked with a real download. Two different videos with the same title in one
   folder now share a file name, and yt-dlp skips the second as already downloaded (rare; could add a suffix).
 
@@ -52,12 +52,12 @@ cargo test) passes.
 ## UI redesign (in planning)
 
 The look and structure follow AvaDM (`/data/projects/AvaDM/docs/DESIGN.md`, canvas "AvaDM main window").
-The mockups live in the Claude design canvas "TubeGrab main window":
+The mockups live in the Claude design canvas "AvaTG main window":
 https://claude.ai/artifact/QkT75qvfYzuqEXLTHNdXEo
 
 
 ### Small features to carry over from AvaDM (owner: keep them)
-Collected from AvaDM's git history and CHANGELOG. Each needs a TubeGrab equivalent:
+Collected from AvaDM's git history and CHANGELOG. Each needs a AvaTG equivalent:
 - **Adding links**: clipboard button in the top bar; **Ctrl+V anywhere on the list** (no text field focused, no
   dialog open) adds the clipboard's links; **drag and drop** of links or text with links onto the window, with a
   full-window overlay ("Drop to add", "N links found", amber "No link found in this item"). Read every drag format:
@@ -82,7 +82,7 @@ Collected from AvaDM's git history and CHANGELOG. Each needs a TubeGrab equivale
 ## Decisions (owner)
 - Stack: Tauri 2 + React/TS.
 - Tools are downloaded on first run into app data and updated from Settings → Tools. They are not bundled.
-- Project name: tubegrab.
+- Project name: avatg.
 - Package manager: **bun** (2026-11-14). `bun.lock`, `bun run dev/build` in `tauri.conf.json`.
 - UI (2026-11-14):
   - AvaDM's **Dark glass** look only. No Frost/light theme. Keep the glass (transparency) effect with a strength
@@ -100,7 +100,7 @@ Collected from AvaDM's git history and CHANGELOG. Each needs a TubeGrab equivale
   - Pause all / Resume all (also to be added to AvaDM later): a status-bar chip and a tray menu item. Pause all
     pauses running downloads and **holds waiting ones: nothing new starts until Resume all**. Resume all also resumes
     interrupted downloads.
-- Tools (2026-11-14): FFmpeg is **not bundled**. Each tool (yt-dlp, Deno, FFmpeg) can come from TubeGrab's own
+- Tools (2026-11-14): FFmpeg is **not bundled**. Each tool (yt-dlp, Deno, FFmpeg) can come from AvaTG's own
   downloaded copy, a copy installed on the system (found automatically), or a custom file the user picks. A version
   map decides what is accepted (Deno ≥ 2.3, FFmpeg ≥ 5, yt-dlp warned when older than ~90 days); the downloaded copy
   is the fallback.

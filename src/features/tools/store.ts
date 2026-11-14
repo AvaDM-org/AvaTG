@@ -1,4 +1,4 @@
-// The tools TubeGrab runs: what is available (system, own copy, custom file), which copy is used, and whether
+// The tools AvaTG runs: what is available (system, own copy, custom file), which copy is used, and whether
 // its version is good enough. The chosen paths are handed to Rust, which runs them.
 import { create } from "zustand";
 import { setToolPaths, toolsStatus, toolVersion, type ToolInfo } from "../../ipc";

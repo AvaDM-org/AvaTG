@@ -38,7 +38,7 @@ describe("resolveTool", () => {
     expect(resolveTool("ffmpeg", { source: "auto", customPath: "" }, c("8.1.3", "9.0.2"), today).from).toBe("system");
   });
 
-  it("automatic falls back to TubeGrab's copy when the system one is too old", () => {
+  it("automatic falls back to AvaTG's copy when the system one is too old", () => {
     expect(resolveTool("ffmpeg", { source: "auto", customPath: "" }, c("4.4", "9.0.2"), today).from).toBe("app");
   });
 

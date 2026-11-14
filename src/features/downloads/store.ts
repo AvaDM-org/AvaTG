@@ -31,7 +31,7 @@ const argsFor = (d: DownloadRecord) =>
     : (d.args ?? []);
 
 /** The download's own folder for unfinished files; deleting it is how Cancel cleans up. */
-const partsDirOf = (d: DownloadRecord) => `${d.outputDir}/.tubegrab-parts/${d.id}`;
+const partsDirOf = (d: DownloadRecord) => `${d.outputDir}/.avatg-parts/${d.id}`;
 const cleanUp = (d: DownloadRecord) => void deleteParts(partsDirOf(d)).catch(() => {});
 
 interface DownloadsStore {
@@ -138,7 +138,7 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
 
     load: async () => {
       const resume = getSettings().resumeOnLaunch;
-      // Whatever was running or waiting when TubeGrab closed is "interrupted", or simply queued again.
+      // Whatever was running or waiting when AvaTG closed is "interrupted", or simply queued again.
       const items = (await loadDownloads<DownloadRecord>()).map((d) =>
         d.status === "running" || d.status === "queued"
           ? { ...d, status: resume ? ("queued" as const) : ("interrupted" as const) }

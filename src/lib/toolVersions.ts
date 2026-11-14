@@ -1,11 +1,11 @@
-// Which copy of each tool TubeGrab runs, and whether its version is good enough.
-// A tool can come from the system (found on PATH), TubeGrab's own downloaded copy, or a file the user picked.
+// Which copy of each tool AvaTG runs, and whether its version is good enough.
+// A tool can come from the system (found on PATH), AvaTG's own downloaded copy, or a file the user picked.
 
 export type ToolId = "ytdlp" | "deno" | "ffmpeg";
 export type ToolSource = "auto" | "app" | "custom";
 
 export interface ToolChoice {
-  /** "auto": a good system copy if there is one, else TubeGrab's own */
+  /** "auto": a good system copy if there is one, else AvaTG's own */
   source: ToolSource;
   customPath: string;
 }
@@ -41,7 +41,7 @@ export function checkVersion(id: ToolId, version: string | null, today = new Dat
 }
 
 export interface ToolCandidates {
-  /** TubeGrab's own copy */
+  /** AvaTG's own copy */
   app: { path: string; version: string | null } | null;
   /** found on PATH */
   system: { path: string; version: string | null } | null;

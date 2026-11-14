@@ -34,7 +34,7 @@ export interface Settings {
   cookiesBrowser: string;
   // Tools
   checkToolUpdates: boolean;
-  /** where each tool comes from: automatic (system if good, else TubeGrab's), TubeGrab's copy, or a custom file */
+  /** where each tool comes from: automatic (system if good, else AvaTG's), AvaTG's copy, or a custom file */
   toolSources: Record<ToolId, ToolChoice>;
   /** the last choices made in a picker, used as the starting point next time */
   preset: Preset;

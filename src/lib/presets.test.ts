@@ -30,8 +30,8 @@ describe("buildArgs", () => {
   });
 
   it("keeps unfinished files in the download's working folder", () => {
-    const a = buildArgs(DEFAULT_PRESET, { outputDir: "/v", partsDir: "/v/.tubegrab-parts/d1" }, opts);
-    expect(a).toContain("temp:/v/.tubegrab-parts/d1");
+    const a = buildArgs(DEFAULT_PRESET, { outputDir: "/v", partsDir: "/v/.avatg-parts/d1" }, opts);
+    expect(a).toContain("temp:/v/.avatg-parts/d1");
   });
 
   it("MP3: extracts audio at best VBR", () => {

@@ -1,4 +1,4 @@
-//! TubeGrab's native side. Rust only runs processes and manages files and storage;
+//! AvaTG's native side. Rust only runs processes and manages files and storage;
 //! download logic, presets and yt-dlp arguments live in the TypeScript frontend.
 
 mod blur;

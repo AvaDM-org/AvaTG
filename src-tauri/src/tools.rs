@@ -25,7 +25,7 @@ pub struct ToolInfo {
     /// "ytdlp" | "deno" | "ffmpeg"
     pub id: String,
     pub name: String,
-    /// TubeGrab's own downloaded copy
+    /// AvaTG's own downloaded copy
     pub installed: bool,
     pub version: Option<String>,
     pub app_path: String,
@@ -33,8 +33,8 @@ pub struct ToolInfo {
     pub system: Option<ToolCopy>,
 }
 
-/// The executable each tool runs from, chosen by the frontend (system, custom or TubeGrab's copy).
-/// Empty until the frontend sets it; then TubeGrab's own copy is used.
+/// The executable each tool runs from, chosen by the frontend (system, custom or AvaTG's copy).
+/// Empty until the frontend sets it; then AvaTG's own copy is used.
 #[derive(Default)]
 pub struct ToolPaths(pub std::sync::Mutex<std::collections::HashMap<String, PathBuf>>);
 
@@ -51,7 +51,7 @@ pub fn set_tool_paths(
     }
 }
 
-/// The executable to run for a tool: the chosen path, else TubeGrab's own copy.
+/// The executable to run for a tool: the chosen path, else AvaTG's own copy.
 pub fn resolved_path(app: &AppHandle, id: &str, exe: &str) -> Result<PathBuf, String> {
     let chosen = app
         .state::<ToolPaths>()
@@ -165,7 +165,7 @@ fn ffmpeg_sources() -> Result<Vec<(String, Vec<&'static str>)>, String> {
     ])
 }
 
-/// An HTTP client that uses TubeGrab's proxy setting. `read_timeout` fails a download that stalls for 30 s
+/// An HTTP client that uses AvaTG's proxy setting. `read_timeout` fails a download that stalls for 30 s
 /// instead of letting it hang forever.
 fn http(app: &AppHandle) -> Result<reqwest::Client, String> {
     client_builder(app)?
@@ -176,7 +176,7 @@ fn http(app: &AppHandle) -> Result<reqwest::Client, String> {
 
 fn client_builder(app: &AppHandle) -> Result<reqwest::ClientBuilder, String> {
     let mut b = reqwest::Client::builder()
-        .user_agent(concat!("tubegrab/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("avatg/", env!("CARGO_PKG_VERSION")))
         .connect_timeout(Duration::from_secs(20));
     match app.state::<crate::proxy::ProxyState>().get().as_deref() {
         Some("") => b = b.no_proxy(),

@@ -8,7 +8,7 @@ export type { ToolId };
 export interface ToolInfo {
   id: ToolId;
   name: string;
-  /** TubeGrab's own downloaded copy */
+  /** AvaTG's own downloaded copy */
   installed: boolean;
   version: string | null;
   appPath: string;
@@ -49,7 +49,7 @@ export const installTool = (id: ToolId) => invoke<ToolInfo>("install_tool", { id
 export const latestVersions = () => invoke<LatestVersions>("latest_versions");
 export const toolsDir = () => invoke<string>("open_bin_dir");
 export const toolVersion = (id: ToolId, path: string) => invoke<string | null>("tool_version", { id, path });
-/** The executable to run for each tool; tools left out use TubeGrab's own copy. */
+/** The executable to run for each tool; tools left out use AvaTG's own copy. */
 export const setToolPaths = (paths: Partial<Record<ToolId, string>>) => invoke<void>("set_tool_paths", { paths });
 
 // ytdlp.rs
@@ -69,7 +69,7 @@ export const loadSettings = () => invoke<Record<string, unknown>>("settings_load
 export const saveSetting = (key: string, value: unknown) => invoke<void>("settings_save", { key, value });
 
 // files.rs
-/** Deletes a download's working folder of unfinished files (`<download folder>/.tubegrab-parts/<id>`). */
+/** Deletes a download's working folder of unfinished files (`<download folder>/.avatg-parts/<id>`). */
 export const deleteParts = (dir: string) => invoke<void>("delete_parts", { dir });
 export const deleteFiles = (paths: string[]) => invoke<void>("delete_files", { paths });
 export const renameDescription = (videoPath: string) => invoke<void>("rename_description", { videoPath });

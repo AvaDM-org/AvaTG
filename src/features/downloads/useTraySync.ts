@@ -10,7 +10,7 @@ export function useTraySync() {
       const running = items.filter((d) => d.status === "running");
       const waiting = items.filter((d) => d.status === "queued").length;
       const resumable = items.some((d) => d.status === "paused" || d.status === "interrupted");
-      let tooltip = "TubeGrab";
+      let tooltip = "AvaTG";
       if (held) tooltip += " · Paused";
       else if (running.length === 1 && running[0].percent != null)
         tooltip += ` · 1 downloading, ${Math.floor(running[0].percent)}%`;

@@ -53,7 +53,7 @@ fn migrate(conn: &Connection) -> rusqlite::Result<()> {
 
 pub fn db_path(app: &AppHandle) -> Result<std::path::PathBuf, String> {
     let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
-    Ok(dir.join("tubegrab.db"))
+    Ok(dir.join("avatg.db"))
 }
 
 /// All download records (JSON documents), oldest first.

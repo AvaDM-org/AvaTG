@@ -40,7 +40,7 @@ fn ytdlp_command(app: &AppHandle, cookies_browser: &Option<String>) -> Result<Co
     // yt-dlp finds ffprobe next to the ffmpeg it is given.
     let ffmpeg = resolved_path(app, "ffmpeg", "ffmpeg")?;
     let mut cmd = hidden_command(&ytdlp);
-    // Keep Deno's cache inside TubeGrab's data folder instead of the user's ~/.cache/deno.
+    // Keep Deno's cache inside AvaTG's data folder instead of the user's ~/.cache/deno.
     let data_dir = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
     cmd.env("DENO_DIR", data_dir.join("deno-cache"));
     cmd.arg("--ignore-config")

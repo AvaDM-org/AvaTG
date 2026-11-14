@@ -1,5 +1,5 @@
 // First run: use the tools already on the system when their versions are good, download only what is missing
-// into TubeGrab's own folder (no installer, no admin rights).
+// into AvaTG's own folder (no installer, no admin rights).
 import { DragSpace, TopBar } from "../../components/layout";
 import { WindowControls } from "../../components/WindowControls";
 import { Button } from "../../components/ui/controls";
@@ -17,16 +17,16 @@ export function SetupScreen({ onReady }: { onReady: () => void }) {
   return (
     <>
       <TopBar>
-        <b style={{ fontSize: 16 }}>TubeGrab</b>
+        <b style={{ fontSize: 16 }}>AvaTG</b>
         <DragSpace />
         <WindowControls />
       </TopBar>
       <div className={s.content} style={{ paddingTop: 32, maxWidth: 760, margin: "0 auto", width: "100%" }}>
         <h1>One-time setup</h1>
         <p className={s.intro} style={{ margin: 0 }}>
-          TubeGrab uses three free programs: yt-dlp (the downloader), Deno (runs YouTube's player code for yt-dlp) and
+          AvaTG uses three free programs: yt-dlp (the downloader), Deno (runs YouTube's player code for yt-dlp) and
           FFmpeg (joins video and audio, converts formats). Copies already on your system are used when their versions
-          are good; the rest are downloaded once from their official releases into TubeGrab's own folder. If YouTube is
+          are good; the rest are downloaded once from their official releases into AvaTG's own folder. If YouTube is
           blocked where you are, set a proxy in Settings › Downloads first.
         </p>
         {busyTool && <InstallCard tool={busyTool} progress={progress} />}

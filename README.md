@@ -1,4 +1,4 @@
-# TubeGrab
+# AvaTG
 
 A simple cross-platform desktop app for downloading from YouTube, built with **Tauri 2 + React + TypeScript**.
 It uses [yt-dlp](https://github.com/yt-dlp/yt-dlp), [Deno](https://deno.com) (the JavaScript runtime yt-dlp needs for
@@ -31,9 +31,9 @@ launch a setup screen downloads them into the per-user app data folder:
 
 | OS | Tools folder |
 |---|---|
-| Windows | `%LOCALAPPDATA%\com.mparnian.tubegrab\bin` |
-| macOS | `~/Library/Application Support/com.mparnian.tubegrab/bin` |
-| Linux | `~/.local/share/com.mparnian.tubegrab/bin` |
+| Windows | `%LOCALAPPDATA%\org.avadm.avatg\bin` |
+| macOS | `~/Library/Application Support/org.avadm.avatg/bin` |
+| Linux | `~/.local/share/org.avadm.avatg/bin` |
 
 That folder is always writable by the user, so updating needs no admin rights and no app reinstall.
 **Settings → Tools** shows the installed versions. **Check for updates** compares them with the latest GitHub

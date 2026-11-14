@@ -1,4 +1,4 @@
-// yt-dlp, Deno and FFmpeg: which copy is used (system, TubeGrab's, or a custom file), versions, install, update.
+// yt-dlp, Deno and FFmpeg: which copy is used (system, AvaTG's, or a custom file), versions, install, update.
 // Used by the first-run screen and Settings > Tools.
 import { open as openFile } from "@tauri-apps/plugin-dialog";
 import { useEffect, useState } from "react";
@@ -42,17 +42,17 @@ export function ProjectLink({ id, name }: { id: ToolId; name: string }) {
 
 const SOURCES: { value: ToolSource; label: string; hint: string }[] = [
   { value: "auto", label: "Automatic", hint: "System copy if good" },
-  { value: "app", label: "TubeGrab's copy", hint: "Downloaded" },
+  { value: "app", label: "AvaTG's copy", hint: "Downloaded" },
   { value: "custom", label: "Custom file…", hint: "" },
 ];
 
 const FROM: Record<NonNullable<ResolvedTool["from"]>, string> = {
   system: "System copy",
-  app: "TubeGrab's copy",
+  app: "AvaTG's copy",
   custom: "Your file",
 };
 
-/** Downloads TubeGrab's own copy of tools, one after the other, with progress. */
+/** Downloads AvaTG's own copy of tools, one after the other, with progress. */
 export function useInstaller() {
   const refresh = useTools((st) => st.refresh);
   const [progress, setProgress] = useState<ToolProgress | null>(null);
@@ -119,7 +119,7 @@ export function ToolsSettings() {
           const newer = latest && t.id !== "ffmpeg" ? latest[t.id] : null;
           const updatable = !!newer && t.installed && newer !== t.version;
           const where = r?.from ? `${FROM[r.from]} · ${r.version ?? "?"} · ${r.path}` : "Not installed";
-          const desc = [where, r?.check.note, updatable ? `TubeGrab's copy can update to ${newer}` : null]
+          const desc = [where, r?.check.note, updatable ? `AvaTG's copy can update to ${newer}` : null]
             .filter(Boolean)
             .join(" · ");
           return (
@@ -161,7 +161,7 @@ export function ToolsSettings() {
                 variant={updatable || (!t.installed && !r?.check.ok) ? "primary" : "secondary"}
                 disabled={!!busy}
                 onClick={() => void install([t.id])}
-                title="Download TubeGrab's own copy"
+                title="Download AvaTG's own copy"
               >
                 {!t.installed ? "Download" : updatable ? "Update" : "Reinstall"}
               </Button>

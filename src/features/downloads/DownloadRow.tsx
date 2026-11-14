@@ -105,7 +105,7 @@ function StatusCell({ d, live, held }: { d: DownloadRecord; live: LiveProgress |
             <Icon name="alert" size={14} />
           </span>
           <b className={s.warn}>Interrupted</b>
-          <span>· Stopped when TubeGrab closed</span>
+          <span>· Stopped when AvaTG closed</span>
         </div>
       );
     case "failed":
