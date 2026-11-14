@@ -48,6 +48,29 @@ https://claude.ai/artifact/QkT75qvfYzuqEXLTHNdXEo
 
 Open: the code architecture and coding standards (proposal made, not yet approved).
 
+### Small features to carry over from AvaDM (owner: keep them)
+Collected from AvaDM's git history and CHANGELOG. Each needs a TubeGrab equivalent:
+- **Adding links**: clipboard button in the top bar; **Ctrl+V anywhere on the list** (no text field focused, no
+  dialog open) adds the clipboard's links; **drag and drop** of links or text with links onto the window, with a
+  full-window overlay ("Drop to add", "N links found", amber "No link found in this item"). Read every drag format:
+  `text/uri-list`, `text/plain` and `text/html` (Firefox multi-selected links only arrive as HTML). One link opens
+  the video dialog; several links open a picker list like a playlist. Nothing starts without a confirmation.
+  Tauri note (to verify): browser link drags need the window's native file-drop handling off (`dragDropEnabled: false`)
+  so the webview gets HTML5 drag events.
+- **List**: click / Ctrl / Shift multi-select, tri-state select-all, the bulk toolbar; hover row actions; row
+  right-click menu (Play, Show in folder, Open on YouTube, Copy video link, Download again…, Remove, Delete files…);
+  Status filter and Sort with counts; middle truncation of long titles; tooltips that show the full text of anything
+  truncated; persisted sort/filter.
+- **Keyboard**: Ctrl K search, Esc clears the selection and cancels dialogs, Delete removes, Enter / Ctrl+Enter confirms.
+- **Remove vs Delete files**: separate actions and confirmations (Remove keeps the files).
+- **Double-click a finished download**: setting (Play / Show in folder).
+- **Interrupted downloads**: an "N interrupted · Resume all" chip after a restart, plus the "Resume unfinished downloads"
+  setting.
+- **App shell**: single instance (a second launch shows the running window; `tauri-plugin-single-instance`);
+  tray menu with running downloads and Pause/Resume; in-app toasts for errors; rolling log files with "Open log folder";
+  crash report that opens a prefilled GitHub issue; update-available toast and self-update (Tauri updater plugin);
+  a minimum window size; settings apply immediately with inline validation (no Save button).
+
 ## Decisions (owner)
 - Stack: Tauri 2 + React/TS.
 - Tools are downloaded on first run into app data and updated from Settings → Tools. They are not bundled.
