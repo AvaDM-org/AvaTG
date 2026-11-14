@@ -1,0 +1,141 @@
+/* DataTable: a header that scrolls sideways with the rows, virtualized rows, resize grips and the drop marker.
+   Column widths come from the --cols grid template set on .table. */
+
+.table {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  flex-shrink: 0;
+  overflow: hidden;
+  padding: 0 12px;
+}
+.headRow {
+  position: relative;
+  height: 36px;
+  min-width: var(--min-width);
+  display: grid;
+  grid-template-columns: var(--cols);
+  align-items: stretch;
+  padding: 0 8px 0 20px;
+  font-size: var(--fs-head);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--fg3);
+  user-select: none;
+}
+.headCell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.headCell[data-dragging] {
+  z-index: 1;
+  opacity: 0.85;
+  background: var(--surface);
+  border-radius: var(--r-sm);
+}
+.headButton {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px 0 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: uppercase;
+  cursor: grab;
+}
+.headButton span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.headButton[data-sortable]:hover,
+.headButton[data-active] {
+  color: var(--fg);
+}
+.grip {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  right: 0;
+  width: 12px;
+  cursor: col-resize;
+  touch-action: none;
+}
+.grip::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 5px;
+  width: 1px;
+  background: var(--line);
+  opacity: 0;
+}
+.headRow:hover .grip::after {
+  opacity: 1;
+}
+.grip:hover::after {
+  background: var(--accent);
+}
+.dropMark {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 12px 8px;
+}
+.rows {
+  box-sizing: border-box;
+  min-width: var(--min-width);
+}
+.row {
+  box-sizing: border-box;
+  height: var(--h-row);
+  display: grid;
+  grid-template-columns: var(--cols);
+  align-items: center;
+  padding: 0 8px 0 20px;
+  /* transparent borders keep a 2 px gap between highlighted rows without changing the row pitch */
+  border-block: 1px solid transparent;
+  background-clip: padding-box;
+  border-radius: var(--r-md);
+  font-size: var(--fs-small);
+}
+.row:hover {
+  background-color: var(--hover);
+}
+.row[data-selected] {
+  background-color: var(--sel);
+}
+.cell {
+  min-width: 0;
+  overflow: hidden;
+  padding-right: 12px;
+}
+.fixed {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}

@@ -40,3 +40,21 @@ export function fmtTotalLength(s: number): string {
 }
 
 export const plural = (n: number, word: string) => `${n.toLocaleString("en-US")} ${word}${n === 1 ? "" : "s"}`;
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** A date for lists, 24-hour: "Today, 22:59", "Yesterday, 08:10", "Sep 24, 14:50", "Sep 24, 2025". */
+export function fmtDate(ms: number | null | undefined, now = Date.now()): string {
+  if (ms == null) return "";
+  const d = new Date(ms);
+  const time = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  const day = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((day(new Date(now)) - day(d)) / 86_400_000);
+  if (days === 0) return `Today, ${time}`;
+  if (days === 1) return `Yesterday, ${time}`;
+  const date = `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  return d.getFullYear() === new Date(now).getFullYear() ? `${date}, ${time}` : `${date}, ${d.getFullYear()}`;
+}
+
+/** A duration of work, short: "4s", "1m 12s", "2h 5m". Like fmtEta, from milliseconds. */
+export const fmtTook = (ms: number | null | undefined) => (ms == null ? "" : fmtEta(Math.max(1, ms / 1000)));

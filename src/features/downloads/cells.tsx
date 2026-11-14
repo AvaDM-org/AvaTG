@@ -1,64 +1,31 @@
-// One 52 px row: thumbnail, title and channel, format, size, status cell, speed, hover actions.
-import { memo } from "react";
-import { Checkbox, IconButton, ProgressBar } from "../../components/ui/controls";
+// The downloads list's cells: name, status and the row's hover actions.
+import { IconButton, ProgressBar } from "../../components/ui/controls";
 import { Icon } from "../../components/ui/Icon";
-import { fmtBytes, fmtDuration, fmtEta, fmtSpeed } from "../../lib/format";
+import { fmtDuration, fmtEta } from "../../lib/format";
 import { playFile, showInFolder } from "./fileActions";
 import { useDownloads } from "./store";
 import type { DownloadRecord, LiveProgress } from "./types";
 import s from "./downloads.module.css";
 
-interface Props {
-  d: DownloadRecord;
-  live: LiveProgress | undefined;
-  held: boolean;
-  selected: boolean;
-  onSelect: (e: React.MouseEvent, viaCheckbox: boolean) => void;
-  onOpen: () => void;
-  onMenu: (e: React.MouseEvent) => void;
-  onAskCancel: () => void;
-  onAskRemove: () => void;
-}
-
-export const DownloadRow = memo(function DownloadRow(p: Props) {
-  const { d, live } = p;
+/** Thumbnail (a note for audio), title, and channel · length underneath. */
+export function NameCell({ d }: { d: DownloadRecord }) {
   return (
-    <div
-      className={s.row}
-      data-selected={p.selected || undefined}
-      onClick={(e) => p.onSelect(e, false)}
-      onDoubleClick={p.onOpen}
-      onContextMenu={p.onMenu}
-    >
-      <div className={s.cCheck}>
-        <Checkbox label={`Select ${d.title}`} checked={p.selected} onChange={(_, e) => p.onSelect(e, true)} />
+    <div className={s.nameCell}>
+      <div
+        className={s.thumb}
+        style={{ backgroundImage: d.thumbnail && !d.audioOnly ? `url("${d.thumbnail}")` : undefined }}
+      >
+        {d.audioOnly && <Icon name="music" size={14} />}
       </div>
-      <div className={`${s.cName} ${s.nameCell}`}>
-        <div
-          className={s.thumb}
-          style={{ backgroundImage: d.thumbnail && !d.audioOnly ? `url("${d.thumbnail}")` : undefined }}
-        >
-          {d.audioOnly && <Icon name="music" size={14} />}
-        </div>
-        <div className={s.nameText}>
-          <b title={d.title}>{d.title}</b>
-          <small title={d.dir}>{[d.channel, fmtDuration(d.duration)].filter(Boolean).join(" · ")}</small>
-        </div>
-      </div>
-      <div className={`${s.cFormat} ${s.format}`}>{d.formatLabel}</div>
-      <div className={`${s.cSize} tnum ${d.sizeBytes ? "" : s.muted}`}>{d.sizeBytes ? fmtBytes(d.sizeBytes) : "—"}</div>
-      <div className={s.cStatus}>
-        <StatusCell d={d} live={live} held={p.held} />
-      </div>
-      <div className={`${s.cSpeed} tnum ${live?.speed ? "" : s.muted}`}>{live?.speed ? fmtSpeed(live.speed) : "—"}</div>
-      <div className={s.cActions} onClick={(e) => e.stopPropagation()}>
-        <RowActions d={d} onAskCancel={p.onAskCancel} onAskRemove={p.onAskRemove} />
+      <div className={s.nameText}>
+        <b title={d.title}>{d.title}</b>
+        <small title={d.dir}>{[d.channel, fmtDuration(d.duration)].filter(Boolean).join(" · ")}</small>
       </div>
     </div>
   );
-});
+}
 
-function StatusCell({ d, live, held }: { d: DownloadRecord; live: LiveProgress | undefined; held: boolean }) {
+export function StatusCell({ d, live, held }: { d: DownloadRecord; live: LiveProgress | undefined; held: boolean }) {
   const pct = d.percent == null ? null : Math.floor(d.percent);
   switch (d.status) {
     case "running": {
@@ -137,7 +104,7 @@ function StatusCell({ d, live, held }: { d: DownloadRecord; live: LiveProgress |
   }
 }
 
-function RowActions({
+export function RowActions({
   d,
   onAskCancel,
   onAskRemove,

@@ -35,9 +35,9 @@ reopened; columns **reorder, resize and hide like Dolphin/Explorer**.
 |---|---|---|
 | 1 | DB backup before each schema migration (`avatg.db.bak-v<N>`, `VACUUM INTO`) | done |
 | 2 | Dev-only demo mode: the frontend runs in a normal browser with mocked IPC (`?demo`), one row per status, fake progress; a `?gallery` page of every control. Never in release builds | demo done (`src/dev/demo.ts`); gallery comes with #13 |
-| 3 | Generic table: column defs, drag to reorder, resize grips, header right-click menu (show/hide, reset), horizontal scroll, sort by header (arrow, click again reverses). Layout, sort and filters saved | todo |
-| 4 | Virtualized rows (own fixed-height hook, no dependency): long channel lists stay fast | todo |
-| 5 | Type filter (All / Video / Audio, live counts) and new columns: Added, Channel, Duration, Took, Avg speed, Folder | todo |
+| 3 | Generic table: column defs, drag to reorder, resize grips, header right-click menu (show/hide, reset), horizontal scroll, sort by header (arrow, click again reverses). Layout, sort and filters saved | done |
+| 4 | Virtualized rows (own fixed-height hook, no dependency): long channel lists stay fast | done |
+| 5 | Type filter (All / Video / Audio, live counts) and new columns: Added, Channel, Duration, Took, Avg speed, Folder | done |
 | 6 | History stats: started/finished time, time running and time transferring summed across resumes; "Took" and "Average speed"; the real file size once finished | todo |
 | 7 | yt-dlp output per download (warnings no longer hidden): a log kept in memory, WARNING lines as toasts (once per message) | todo |
 | 8 | Detail panel: General / Format / Log tabs, action column, selection summary for several rows | todo |

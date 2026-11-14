@@ -35,6 +35,15 @@ export interface DownloadRecord {
   error: string | null;
   /** automatic resumes used after failures; reset by a manual resume */
   autoRetries: number;
+  // History (records from before 2026-11-16 have none): "Took" and "Average speed".
+  /** when the last run started, ms */
+  startedAt?: number | null;
+  /** when it completed, ms */
+  finishedAt?: number | null;
+  /** time spent running, summed over every run (pauses and waiting don't count), ms */
+  activeMs?: number;
+  /** the part of activeMs spent receiving data (not merging or converting), ms */
+  transferMs?: number;
 }
 
 /** Fast-changing state that is shown but never stored. */

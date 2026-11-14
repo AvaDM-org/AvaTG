@@ -320,7 +320,7 @@
   background: var(--hover);
   outline: 0;
 }
-.menuItem > span:first-of-type {
+.menuLabel {
   flex: 1;
 }
 .menuItem kbd,

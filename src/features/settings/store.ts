@@ -2,7 +2,9 @@
 import { downloadDir } from "@tauri-apps/api/path";
 import { create } from "zustand";
 import { loadSettings, saveSetting, setCloseToTray, setProxy, systemProxy } from "../../ipc";
+import type { ColumnLayout, SortState } from "../../components/table/layout";
 import { DEFAULT_THEME_ID } from "../../lib/themes";
+import type { StatusFilter, TypeFilter } from "../downloads/view";
 import { DEFAULT_PRESET, type DownloadOptions, type Preset, type SubtitleMode } from "../../lib/presets";
 import type { ToolChoice, ToolId } from "../../lib/toolVersions";
 
@@ -44,6 +46,16 @@ export interface Settings {
   toolSources: Record<ToolId, ToolChoice>;
   /** the last choices made in a picker, used as the starting point next time */
   preset: Preset;
+  /** the downloads list as the user left it: columns, sort and filters (the search is not kept) */
+  downloadsView: DownloadsView;
+}
+
+export interface DownloadsView {
+  /** null: the default columns */
+  columns: ColumnLayout | null;
+  sort: SortState;
+  status: StatusFilter;
+  type: TypeFilter;
 }
 
 export const DEFAULTS: Settings = {
@@ -77,6 +89,7 @@ export const DEFAULTS: Settings = {
     ffmpeg: { source: "auto", customPath: "" },
   },
   preset: DEFAULT_PRESET,
+  downloadsView: { columns: null, sort: { column: "added", desc: true }, status: "all", type: "all" },
 };
 
 interface SettingsStore {
@@ -104,7 +117,12 @@ export const useSettings = create<SettingsStore>((set, get) => ({
 
   load: async () => {
     const stored = (await loadSettings()) as Partial<Settings>;
-    const settings: Settings = { ...DEFAULTS, ...stored, preset: { ...DEFAULT_PRESET, ...stored.preset } };
+    const settings: Settings = {
+      ...DEFAULTS,
+      ...stored,
+      preset: { ...DEFAULT_PRESET, ...stored.preset },
+      downloadsView: { ...DEFAULTS.downloadsView, ...stored.downloadsView },
+    };
     if (!settings.outputDir) {
       settings.outputDir = await downloadDir().catch(() => "");
     }

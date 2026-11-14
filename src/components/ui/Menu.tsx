@@ -96,7 +96,7 @@ export function MenuItem({
       {checked !== undefined && (
         <span className={s.menuCheck}>{checked && <Icon name="check" size={14} strokeWidth={2.2} />}</span>
       )}
-      <span>{children}</span>
+      <span className={s.menuLabel}>{children}</span>
       {hint && <small>{hint}</small>}
     </button>
   );

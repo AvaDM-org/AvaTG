@@ -8,6 +8,7 @@ const PATHS = {
     </>
   ),
   chevronDown: <path d="m6 9 6 6 6-6" />,
+  chevronUp: <path d="m6 15 6-6 6 6" />,
   chevronRight: <path d="m9 6 6 6-6 6" />,
   back: <path d="M15 6l-6 6 6 6" />,
   sort: <path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4" />,

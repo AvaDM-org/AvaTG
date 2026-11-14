@@ -1,4 +1,4 @@
-/* Downloads list: column header, 52 px rows, status cell, hover actions. */
+/* Downloads list: top-bar filters, cells, status cell, hover actions. The table itself is DataTable. */
 
 .search {
   width: 250px;
@@ -43,95 +43,23 @@
   white-space: nowrap;
 }
 
-.header {
-  height: 36px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  padding: 0 32px;
-  font-size: var(--fs-head);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--fg3);
-}
-.header button {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-}
-.header button[data-active] {
-  color: var(--fg);
-}
-
-.cCheck {
-  width: 40px;
-  flex-shrink: 0;
-}
-.cName {
-  flex: 1;
-  min-width: 0;
-}
-.cFormat {
-  width: 124px;
-  flex-shrink: 0;
-}
-.cSize {
-  width: 84px;
-  flex-shrink: 0;
-}
-.cStatus {
-  width: 220px;
-  flex-shrink: 0;
-  padding-right: 16px;
-}
-.cSpeed {
-  width: 88px;
-  flex-shrink: 0;
-}
-.cActions {
-  width: 100px;
-  flex-shrink: 0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
-.list {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 0 12px 8px;
-}
-.row {
-  height: var(--h-row);
-  margin: 1px 0;
-  display: flex;
-  align-items: center;
-  padding: 0 8px 0 20px;
-  border-radius: var(--r-md);
-  font-size: var(--fs-small);
-}
-.row:hover {
-  background: var(--hover);
-}
-.row[data-selected] {
-  background: var(--sel);
-}
-.row .cActions > * {
+/* Row extras on top of DataTable's row: hover actions appear on hover, selection or keyboard focus. */
+.row .actionsInner > * {
   visibility: hidden;
 }
-.row:hover .cActions > *,
-.row[data-selected] .cActions > *,
-.row:focus-within .cActions > * {
+.row:hover .actionsInner > *,
+.row[data-selected] .actionsInner > *,
+.row:focus-within .actionsInner > * {
   visibility: visible;
 }
-.row .cActions button {
+.actions {
+  justify-content: flex-end;
+}
+.actionsInner {
+  display: flex;
+  gap: 6px;
+}
+.actionsInner button {
   background: var(--surface);
 }
 
@@ -139,7 +67,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-right: 16px;
 }
 .thumb {
   position: relative;
@@ -177,7 +104,11 @@
   color: var(--fg3);
 }
 .format {
+  display: block;
   color: var(--fg2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .status {
