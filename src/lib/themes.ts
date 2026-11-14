@@ -93,9 +93,10 @@ const slug = (s: string) =>
     .replace(/^-|-$/g, "")
     .slice(0, 64) || "theme";
 
-// --- contrast (AvaDM: Fg2 and Fg3 must stay at 4.5:1 on the window) ---
+// --- contrast (AvaDM: Fg2 and Fg3 must stay at 4.5:1 on the window and everything drawn on it) ---
 
-const over = (top: Rgba, bottom: Rgba): Rgba => ({
+/** `top` painted over an opaque `bottom`. */
+export const over = (top: Rgba, bottom: Rgba): Rgba => ({
   r: top.r * top.a + bottom.r * (1 - top.a),
   g: top.g * top.a + bottom.g * (1 - top.a),
   b: top.b * top.a + bottom.b * (1 - top.a),
@@ -115,14 +116,40 @@ export function contrast(a: Rgba, b: Rgba): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
+/** Where text is drawn: the window itself and the tones laid over it. */
+export const TEXT_SURFACES = ["Glass", "Panel", "Bar", "Sel", "Hover", "Field"] as const;
+export type TextSurface = (typeof TEXT_SURFACES)[number];
+
+/** The lowest contrast of a text colour over the opaque window and each tone on it. */
+export function worstContrast(
+  c: Record<TokenName, Rgba>,
+  solidGlass: Rgba,
+  text: TokenName,
+): { surface: TextSurface; ratio: number } {
+  const base = { ...solidGlass, a: 1 };
+  return TEXT_SURFACES.map((surface) => {
+    const bg = surface === "Glass" ? base : over(c[surface], base);
+    return { surface, ratio: contrast(over(c[text], bg), bg) };
+  }).reduce((worst, x) => (x.ratio < worst.ratio ? x : worst));
+}
+
+const SURFACE_NAMES: Record<TextSurface, string> = {
+  Glass: "the window",
+  Panel: "panels",
+  Bar: "the bars",
+  Sel: "selected rows",
+  Hover: "hovered rows",
+  Field: "fields",
+};
+
 function contrastWarnings(c: Record<TokenName, Rgba>, solidGlass: Rgba): string[] {
-  const bg = { ...solidGlass, a: 1 };
   return (["Fg2", "Fg3"] as const)
-    .map((t) => [t, contrast(over(c[t], bg), bg)] as const)
-    .filter(([, ratio]) => ratio < 4.5)
+    .map((t) => [t, worstContrast(c, solidGlass, t)] as const)
+    .filter(([, w]) => w.ratio < 4.5)
     .map(
-      ([t, ratio]) =>
-        `${t === "Fg2" ? "Secondary" : "Helper"} text is hard to read (${ratio.toFixed(1)}:1, needs 4.5:1)`,
+      ([t, w]) =>
+        `${t === "Fg2" ? "Secondary" : "Helper"} text is hard to read on ${SURFACE_NAMES[w.surface]} ` +
+        `(${w.ratio.toFixed(1)}:1, needs 4.5:1)`,
     );
 }
 

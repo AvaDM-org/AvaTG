@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BUILT_IN_THEMES, glassColor, parseColor, parseTheme } from "./themes";
+import { BUILT_IN_THEMES, glassColor, parseColor, parseTheme, worstContrast } from "./themes";
 
 describe("parseColor", () => {
   it("reads #AARRGGBB with alpha first, like AvaDM", () => {
@@ -29,6 +29,21 @@ describe("parseTheme", () => {
 
   it("rejects files that are not themes", () => {
     expect(() => parseTheme({ hello: 1 })).toThrow(/not a theme/);
+  });
+});
+
+describe("contrast", () => {
+  it("keeps every built-in theme's text readable on every surface", () => {
+    for (const t of BUILT_IN_THEMES) {
+      expect(worstContrast(t.colors, t.solidGlass, "Fg").ratio).toBeGreaterThanOrEqual(7);
+      expect(worstContrast(t.colors, t.solidGlass, "Fg2").ratio).toBeGreaterThanOrEqual(4.5);
+      expect(worstContrast(t.colors, t.solidGlass, "Fg3").ratio).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("names the surface where text is hardest to read", () => {
+    const t = parseTheme({ id: "pink", name: "Pink", colors: { Sel: "#FFF7EEF0" } });
+    expect(t.warnings[0]).toMatch(/selected rows/);
   });
 });
 
