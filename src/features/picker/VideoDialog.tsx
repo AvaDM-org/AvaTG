@@ -38,7 +38,6 @@ export function VideoDialog({ info }: { info: VideoInfo }) {
       [
         {
           url: info.url,
-          videoId: info.id,
           title: info.title,
           channel: info.channel,
           duration: info.duration,

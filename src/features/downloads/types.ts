@@ -9,8 +9,6 @@ export interface DownloadRecord {
   id: string;
   createdAt: number;
   url: string;
-  /** YouTube video id; our file names end in "[id]", which finds the partial files on cancel */
-  videoId: string;
   title: string;
   channel: string | null;
   duration: number | null;
@@ -27,7 +25,7 @@ export interface DownloadRecord {
   folder: string | null;
   /** 1-based playlist position used as a "001 - " prefix, if any */
   index: number | null;
-  /** folder the file lands in (outputDir plus folder); used to find partial files */
+  /** folder the file lands in (outputDir plus folder) */
   dir: string;
   saveDescription: boolean;
   status: DownloadStatus;

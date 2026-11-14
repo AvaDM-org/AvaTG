@@ -35,6 +35,11 @@ cargo test) passes.
 - In the app (owner, 2026-11-14): downloads work end to end; the repaint glitch (parts of the window disappearing
   on click) went away after dropping the `WEBKIT_DISABLE_DMABUF_RENDERER` override.
 
+- File names are `Title.ext` (`001 - Title.ext` in numbered playlists), no `[id]`. Unfinished files live in a
+  per-download working folder `<download folder>/.tubegrab-parts/<download id>/` (`--paths temp:`); Cancel,
+  Remove and finishing delete it. Checked with a real download. Two different videos with the same title in one
+  folder now share a file name, and yt-dlp skips the second as already downloaded (rare; could add a suffix).
+
 ### Not verified yet (do next)
 1. FFmpeg install through the proxy; tool sources (system / custom) once built.
 2. In the app: Pause then Resume continuing from the `.part` file, Cancel deleting the partial files, Pause all

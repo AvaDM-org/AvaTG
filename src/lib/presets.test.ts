@@ -25,8 +25,13 @@ describe("buildArgs", () => {
     expect(after(a, "-f")).toBe("bv*+ba/b");
     expect(after(a, "-S")).toBe("res:1080,vcodec:h264,ext:mp4:m4a");
     expect(after(a, "--merge-output-format")).toBe("mp4");
-    expect(after(a, "-o")).toBe("%(title)s [%(id)s].%(ext)s");
+    expect(after(a, "-o")).toBe("%(title)s.%(ext)s");
     expect(a).not.toContain("--limit-rate");
+  });
+
+  it("keeps unfinished files in the download's working folder", () => {
+    const a = buildArgs(DEFAULT_PRESET, { outputDir: "/v", partsDir: "/v/.tubegrab-parts/d1" }, opts);
+    expect(a).toContain("temp:/v/.tubegrab-parts/d1");
   });
 
   it("MP3: extracts audio at best VBR", () => {
@@ -62,7 +67,7 @@ describe("buildArgs", () => {
     );
     expect(a).toContain("--write-description");
     expect(after(a, "--limit-rate")).toBe("5M");
-    expect(after(a, "-o")).toBe("My_ List/007 - %(title)s [%(id)s].%(ext)s");
+    expect(after(a, "-o")).toBe("My_ List/007 - %(title)s.%(ext)s");
   });
 });
 

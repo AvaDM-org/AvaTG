@@ -4,7 +4,7 @@ import { create } from "zustand";
 import {
   deleteDownloads,
   deleteFiles,
-  deletePartials,
+  deleteParts,
   loadDownloads,
   onDownloadEvent,
   renameDescription,
@@ -25,10 +25,14 @@ const argsFor = (d: DownloadRecord) =>
   d.preset
     ? buildArgs(
         d.preset,
-        { outputDir: d.outputDir, subfolder: d.folder, index: d.index },
+        { outputDir: d.outputDir, subfolder: d.folder, index: d.index, partsDir: partsDirOf(d) },
         downloadOptions(getSettings()),
       )
     : (d.args ?? []);
+
+/** The download's own folder for unfinished files; deleting it is how Cancel cleans up. */
+const partsDirOf = (d: DownloadRecord) => `${d.outputDir}/.tubegrab-parts/${d.id}`;
+const cleanUp = (d: DownloadRecord) => void deleteParts(partsDirOf(d)).catch(() => {});
 
 interface DownloadsStore {
   items: DownloadRecord[];
@@ -92,6 +96,7 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
       const file = await runDownload(id, d.url, argsFor(d), getSettings().cookiesBrowser);
       if (file && d.saveDescription) await renameDescription(file).catch(() => {});
       patch(id, { status: "done", percent: 100, filepath: file ?? d.filepath, autoRetries: 0 });
+      cleanUp(d);
     } catch (e) {
       const reason = stopping.get(id);
       stopping.delete(id);
@@ -100,9 +105,9 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
       else if (reason === "requeued") patch(id, { status: "queued" });
       else if (reason === "cancelled") {
         patch(id, { status: "cancelled", percent: null });
-        await deletePartials(d.dir, d.videoId).catch(() => 0);
+        cleanUp(d);
       } else if (reason === "removed") {
-        /* already gone from the list */
+        cleanUp(d); // again, now that yt-dlp has stopped writing
       } else {
         const cur = find(id);
         const retries = cur?.autoRetries ?? 0;
@@ -172,7 +177,7 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
         const d = find(id);
         if (d && d.status !== "running" && d.status !== "done") {
           patch(id, { status: "cancelled", percent: null });
-          void deletePartials(d.dir, d.videoId).catch(() => 0);
+          cleanUp(d);
         }
       }
     },
@@ -182,10 +187,9 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
       stop(ids, "removed");
       set((st) => ({ items: st.items.filter((d) => !ids.includes(d.id)) }));
       void deleteDownloads(ids);
-      if (withFiles) {
-        void deleteFiles(gone.flatMap((d) => (d.filepath ? [d.filepath] : [])));
-        for (const d of gone) void deletePartials(d.dir, d.videoId).catch(() => 0);
-      }
+      // Unfinished files are useless once a download is off the list; finished files only go with "Delete files".
+      gone.forEach(cleanUp);
+      if (withFiles) void deleteFiles(gone.flatMap((d) => (d.filepath ? [d.filepath] : [])));
       pump();
     },
 

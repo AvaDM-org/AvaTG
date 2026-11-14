@@ -78,7 +78,7 @@ pub fn run() {
             db::downloads_delete,
             db::settings_load,
             db::settings_save,
-            files::delete_partials,
+            files::delete_parts,
             files::delete_files,
             files::rename_description,
             tray::tray_update,

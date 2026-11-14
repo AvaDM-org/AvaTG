@@ -7,7 +7,6 @@ import type { DownloadRecord } from "./types";
 
 export interface PickedVideo {
   url: string;
-  videoId: string;
   title: string;
   channel: string | null;
   duration: number | null;
@@ -16,7 +15,6 @@ export interface PickedVideo {
 
 export const fromEntry = (e: Entry): PickedVideo => ({
   url: e.url,
-  videoId: e.id,
   title: e.title,
   channel: e.channel,
   duration: e.duration,
@@ -49,7 +47,6 @@ export function queueVideos(
     id: newId(),
     createdAt: now + i,
     url: v.url,
-    videoId: v.videoId,
     title: v.title,
     channel: v.channel,
     duration: v.duration,

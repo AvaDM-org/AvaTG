@@ -69,7 +69,8 @@ export const loadSettings = () => invoke<Record<string, unknown>>("settings_load
 export const saveSetting = (key: string, value: unknown) => invoke<void>("settings_save", { key, value });
 
 // files.rs
-export const deletePartials = (dir: string, videoId: string) => invoke<number>("delete_partials", { dir, videoId });
+/** Deletes a download's working folder of unfinished files (`<download folder>/.tubegrab-parts/<id>`). */
+export const deleteParts = (dir: string) => invoke<void>("delete_parts", { dir });
 export const deleteFiles = (paths: string[]) => invoke<void>("delete_files", { paths });
 export const renameDescription = (videoPath: string) => invoke<void>("rename_description", { videoPath });
 
