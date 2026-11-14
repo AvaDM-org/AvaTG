@@ -1,10 +1,16 @@
 # Progress
 
-## Status (2026-11-14)
+## Status (2026-11-15)
 
-**The redesigned app builds and runs on Linux (Fedora 44, KDE Wayland).** `bun run tauri dev` starts it; the
-first launch shows the one-time tools setup. `bun run check` (tsc, eslint, vitest, rustfmt, clippy -D warnings,
-cargo test) passes.
+**AvaTG (renamed from TubeGrab) is on GitHub: https://github.com/AvaDM-org/AvaTG (public, branch `main`).**
+The app builds and runs on Linux (Fedora 44, KDE Wayland), including a release RPM. `bun run check` passes, and so
+does the Check workflow on GitHub. Self-updates and the release workflow are written but no release has been cut.
+
+### Next
+1. Cut a test release (`v0.1.0`) and check every installer and the update feed; then a second version to test an
+   actual update. Pre-release tags may fail the RPM build (RPM versions cannot contain `-`).
+2. Build the Cherry dark theme and the JSON theme system from the canvas (Settings › Appearance).
+3. Test on Windows and macOS (glass via `window-vibrancy`, the updater).
 
 ### Architecture (approved 2026-11-14)
 - Rust (`src-tauri/src`): `ytdlp.rs` runs yt-dlp, `tools.rs` installs the tools, `db.rs` stores download recipes and

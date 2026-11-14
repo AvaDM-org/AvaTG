@@ -61,16 +61,18 @@ ffmpeg has no simple "latest version" feed, so the app always offers **Reinstall
 ## Project layout
 
 ```
-src-tauri/src/tools.rs     download/extract/version the tools (URLs per OS/arch live here)
-src-tauri/src/process.rs   runs yt-dlp: -J metadata queries + downloads with progress events, cancel (kills process tree)
-src-tauri/src/lib.rs       command registration
-src/lib/api.ts             typed invoke/event wrappers
-src/lib/youtube.ts         link classification (video/playlist/channel) + yt-dlp JSON → UI models
-src/lib/presets.ts         presets and preset → yt-dlp argument mapping (change format logic here)
-src/lib/queue.ts           download queue, concurrency, progress handling
-src/lib/actions.ts         selections → queued jobs (expands channel playlists)
-src/lib/settings.ts        settings in localStorage
-src/components/*           UI (PresetPanel, EntryList, VideoView, CollectionView, QueuePanel, ToolsPanel, SettingsDialog)
+src-tauri/src/ytdlp.rs     runs yt-dlp: -J metadata queries, downloads with progress events, stop
+src-tauri/src/tools.rs     installs/versions yt-dlp, Deno, FFmpeg (download URLs live here); finds system copies
+src-tauri/src/db.rs        SQLite: one JSON "recipe" per download, and the settings
+src-tauri/src/files.rs     per-download working folders (.avatg-parts), deleting files, description → .txt
+src-tauri/src/proxy.rs     the proxy setting and reading the desktop's proxy
+src-tauri/src/blur.rs      glass blur behind the window (Wayland ext_background_effect, KWin, window-vibrancy)
+src-tauri/src/tray.rs      tray menu, close to tray
+src-tauri/src/updater.rs   AvaTG's own updates from GitHub releases
+src/ipc.ts                 every Rust command and event, typed
+src/lib/                   pure logic with tests: presets → yt-dlp args, links, formatting, tool versions
+src/features/              downloads, picker (video dialog, playlist/channel page), settings, tools, updates
+src/components/            window chrome and shared controls; src/styles/tokens.css is the theme
 ```
 
 Design rule: Rust only runs processes and manages files. All yt-dlp format and preset logic is in TypeScript.
@@ -79,15 +81,30 @@ Design rule: Rust only runs processes and manages files. All yt-dlp format and p
 
 Prerequisites: Bun 1.x, Rust (stable, via rustup), and the platform prerequisites from
 <https://v2.tauri.app/start/prerequisites/>: MSVC C++ Build Tools + WebView2 on Windows, Xcode CLT on macOS,
-and webkit2gtk etc. on Linux.
+and on Linux (Fedora names) `webkit2gtk4.1-devel libappindicator-gtk3-devel librsvg2-devel libxdo-devel`.
 
 ```bash
 bun install
 bun run tauri dev      # run in development
-bun run tauri build    # installers in src-tauri/target/release/bundle
+bun run check          # tsc, eslint, vitest, rustfmt, clippy, cargo test
+bun run tauri build    # installers in src-tauri/target/release/bundle (needs the signing key, see below)
 ```
 
-Each OS builds its own installers. For all three, use a GitHub Actions matrix (`tauri-apps/tauri-action`).
+## Releases and updates
+
+Like AvaDM. `.github/workflows/check.yml` checks every push and pull request. `.github/workflows/release.yml`
+runs on a version tag and builds Windows (NSIS), macOS (Apple Silicon and Intel), Linux `.deb`, `.rpm` and AppImage
+into one **draft** release with `latest.json` (the update feed) and `SHA256SUMS.txt`; publish it by hand.
+
+1. Set the same version in `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` and `package.json`.
+2. Add a `## [X.Y.Z]` section to `CHANGELOG.md` (it becomes the release notes).
+3. `git tag vX.Y.Z && git push origin vX.Y.Z` (a pre-release: `vX.Y.Z-rc.N`).
+
+The app checks `releases/latest` (or the highest release, pre-releases included, when that setting is on).
+Windows, macOS and the AppImage update themselves; `.deb`/`.rpm` installs open the release page. Updates are signed:
+the public key is in `tauri.conf.json`, the private key and its password are the repo secrets
+`TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Losing the private key means installed copies
+can no longer update. A local `tauri build` needs the same two values as environment variables.
 
 ## Known limitations
 
