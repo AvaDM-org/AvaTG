@@ -2,7 +2,7 @@
 // blurs behind the window (blur.rs), and applying the chosen theme to the page.
 import { create } from "zustand";
 import { onWindowBlur, themeRead, themeRemove, themeSave, themesList, windowBlur } from "../../ipc";
-import { applyTheme, BUILT_IN_THEMES, parseTheme, type Theme } from "../../lib/themes";
+import { applyTheme, BUILT_IN_THEMES, parseTheme, serializeTheme, uniqueThemeId, type Theme } from "../../lib/themes";
 import { getSettings, useSettings } from "../settings/store";
 
 interface AppearanceStore {
@@ -15,6 +15,10 @@ interface AppearanceStore {
   /** The same, from a file's text (a dropped file: the webview gets no path). */
   importText: (text: string) => Promise<Theme>;
   remove: (id: string) => Promise<void>;
+  /** Write an edited theme to its file and show it (the theme builder saves as you edit). */
+  save: (theme: Theme) => Promise<void>;
+  /** A copy of `theme` under a new name and id, saved and selected. */
+  duplicate: (theme: Theme, name?: string) => Promise<Theme>;
 }
 
 export const allThemes = () => [...BUILT_IN_THEMES, ...useAppearance.getState().imported];
@@ -70,6 +74,29 @@ export const useAppearance = create<AppearanceStore>((set, get) => ({
     set({ imported: [...get().imported.filter((t) => t.id !== theme.id), theme] });
     useSettings.getState().set("themeId", theme.id);
     return theme;
+  },
+
+  save: async (theme) => {
+    await themeSave(theme.id, serializeTheme(theme));
+    const saved = { ...theme, builtIn: false };
+    const list = get().imported;
+    set({
+      imported: list.some((t) => t.id === theme.id)
+        ? list.map((t) => (t.id === theme.id ? saved : t))
+        : [...list, saved],
+    });
+    apply();
+  },
+
+  duplicate: async (theme, name = `${theme.name} copy`) => {
+    const id = uniqueThemeId(
+      name,
+      allThemes().map((t) => t.id),
+    );
+    const copy = parseTheme(JSON.parse(serializeTheme({ ...theme, id, name })));
+    await get().save(copy);
+    useSettings.getState().set("themeId", id);
+    return copy;
   },
 
   remove: async (id) => {

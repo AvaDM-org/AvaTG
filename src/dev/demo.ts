@@ -88,6 +88,7 @@ function initialRecords(): DownloadRecord[] {
 
 const db = new Map<string, unknown>(initialRecords().map((r) => [r.id, r]));
 const settings: Record<string, unknown> = {};
+const themeFiles = new Map<string, string>();
 
 // Fake yt-dlp runs: progress events every 400 ms, then the post-processors, then the file.
 const runs = new Map<string, { timer: number; reject: (e: string) => void }>();
@@ -177,7 +178,9 @@ const handlers: Record<string, (a: Args) => unknown> = {
   system_proxy: () => null,
   install_channel: () => "auto",
   update_check: () => null,
-  themes_list: () => [],
+  themes_list: () => [...themeFiles.values()],
+  theme_save: (a) => void themeFiles.set(a.id as string, a.text as string),
+  theme_remove: (a) => void themeFiles.delete(a.id as string),
   themes_folder: () => `${HOME}/.local/share/org.avadm.avatg/themes`,
   "plugin:path|resolve_directory": () => VIDEOS,
   "plugin:autostart|is_enabled": () => false,

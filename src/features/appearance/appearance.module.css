@@ -94,11 +94,17 @@
   font-size: var(--fs-path);
   color: var(--fg3);
 }
-.remove {
+.more {
   position: absolute;
   top: 14px;
   right: 14px;
   background: var(--menu);
+  opacity: 0;
+}
+.cardWrap:hover .more,
+.more:focus-visible,
+.more[aria-expanded="true"] {
+  opacity: 1;
 }
 .warning {
   margin: 10px 4px 0;

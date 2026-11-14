@@ -42,6 +42,8 @@ export interface Rgba {
 export interface Theme {
   id: string;
   name: string;
+  /** AvaDM's "variant": whether the theme is dark or light */
+  variant: "Dark" | "Light";
   builtIn: boolean;
   colors: Record<TokenName, Rgba>;
   /** the window colour with glass at 0% */
@@ -67,6 +69,7 @@ export function parseTheme(json: unknown, builtIn = false): Theme {
   const t = json as {
     id?: unknown;
     name?: unknown;
+    variant?: unknown;
     colors?: Record<string, unknown>;
     solidFallback?: Record<string, unknown>;
   };
@@ -83,7 +86,39 @@ export function parseTheme(json: unknown, builtIn = false): Theme {
     colors[token] = c;
   }
   const solidGlass = parseColor(t.solidFallback?.Glass) ?? { ...colors.Glass, a: 1 };
-  return { id, name, builtIn, colors, solidGlass, warnings: contrastWarnings(colors, solidGlass) };
+  const variant = t.variant === "Light" ? "Light" : "Dark";
+  return { id, name, variant, builtIn, colors, solidGlass, warnings: contrastWarnings(colors, solidGlass) };
+}
+
+const hex2 = (n: number) =>
+  Math.round(Math.min(255, Math.max(0, n)))
+    .toString(16)
+    .padStart(2, "0")
+    .toUpperCase();
+
+/** A colour as AvaDM writes it: "#AARRGGBB". */
+export const toHex = ({ r, g, b, a }: Rgba) => `#${hex2(a * 255)}${hex2(r)}${hex2(g)}${hex2(b)}`;
+
+/** A theme as its JSON file (the same layout as the built-in files, tokens in a fixed order). */
+export function serializeTheme(t: Pick<Theme, "id" | "name" | "variant" | "colors" | "solidGlass">): string {
+  const colors = Object.fromEntries((Object.keys(TOKENS) as TokenName[]).map((k) => [k, toHex(t.colors[k])]));
+  const file = {
+    formatVersion: 1,
+    id: t.id,
+    name: t.name,
+    variant: t.variant,
+    solidFallback: { Glass: toHex({ ...t.solidGlass, a: 1 }) },
+    colors,
+  };
+  return `${JSON.stringify(file, null, 2)}\n`;
+}
+
+/** An id for a new theme named `name` that none of `taken` uses ("ocean", "ocean-2"…). */
+export function uniqueThemeId(name: string, taken: string[]): string {
+  const base = slug(name).slice(0, 60);
+  let id = base;
+  for (let n = 2; taken.includes(id); n++) id = `${base}-${n}`;
+  return id;
 }
 
 const slug = (s: string) =>
@@ -169,12 +204,19 @@ export function glassColor(theme: Theme, glassPercent: number, hasBlur: boolean)
 }
 
 /** Set every token as a CSS variable on the page. */
-export function applyTheme(theme: Theme, glassPercent: number, hasBlur: boolean, root = document.documentElement) {
-  for (const [token, cssVar] of Object.entries(TOKENS) as [TokenName, string][]) {
-    root.style.setProperty(
+/** The theme as CSS variables: set them on :root for the app, or on one element to preview a theme inside it. */
+export function themeVars(theme: Theme, glassPercent: number, hasBlur: boolean): Record<string, string> {
+  return Object.fromEntries(
+    (Object.entries(TOKENS) as [TokenName, string][]).map(([token, cssVar]) => [
       cssVar,
       cssColor(token === "Glass" ? glassColor(theme, glassPercent, hasBlur) : theme.colors[token]),
-    );
+    ]),
+  );
+}
+
+export function applyTheme(theme: Theme, glassPercent: number, hasBlur: boolean, root = document.documentElement) {
+  for (const [cssVar, value] of Object.entries(themeVars(theme, glassPercent, hasBlur))) {
+    root.style.setProperty(cssVar, value);
   }
 }
 

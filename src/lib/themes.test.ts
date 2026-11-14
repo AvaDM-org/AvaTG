@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { BUILT_IN_THEMES, glassColor, parseColor, parseTheme, worstContrast } from "./themes";
+import {
+  BUILT_IN_THEMES,
+  glassColor,
+  parseColor,
+  parseTheme,
+  serializeTheme,
+  toHex,
+  uniqueThemeId,
+  worstContrast,
+} from "./themes";
 
 describe("parseColor", () => {
   it("reads #AARRGGBB with alpha first, like AvaDM", () => {
@@ -55,5 +64,32 @@ describe("glassColor", () => {
   });
   it("stays nearly solid without blur", () => {
     expect(glassColor(cherry, 100, false).a).toBe(0.88);
+  });
+});
+
+describe("writing themes", () => {
+  it("writes colours as #AARRGGBB", () => {
+    expect(toHex({ a: 128 / 255, r: 255, g: 0, b: 16 })).toBe("#80FF0010");
+  });
+
+  it("round-trips a theme through its JSON file", () => {
+    const cherry = BUILT_IN_THEMES[0];
+    const again = parseTheme(JSON.parse(serializeTheme({ ...cherry, id: "copy", name: "Copy" })));
+    expect(again.colors).toEqual(
+      Object.fromEntries(Object.entries(cherry.colors).map(([k, c]) => [k, parseColor(toHex(c))])),
+    );
+    expect(again.variant).toBe("Dark");
+    expect(again.solidGlass).toEqual(cherry.solidGlass);
+  });
+
+  it("matches the built-in files byte for byte in layout", () => {
+    const text = serializeTheme(BUILT_IN_THEMES[0]);
+    expect(text).toMatch(/^\{\n {2}"formatVersion": 1,\n {2}"id": "cherry-dark",/);
+    expect(text).toContain('"Glass": "#9E1B0D11"');
+  });
+
+  it("finds a free id", () => {
+    expect(uniqueThemeId("Ocean Blue", [])).toBe("ocean-blue");
+    expect(uniqueThemeId("Ocean Blue", ["ocean-blue", "ocean-blue-2"])).toBe("ocean-blue-3");
   });
 });

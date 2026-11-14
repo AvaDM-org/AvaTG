@@ -1,16 +1,21 @@
-// Settings › Appearance: theme cards (built-in, imported, "Import theme…") and the glass effect, like AvaDM.
-import { open as openFile } from "@tauri-apps/plugin-dialog";
+// Settings › Appearance: theme cards (built-in, your own, "New theme", "Import theme…") with Edit, Duplicate,
+// Export and Remove on each card's menu, the theme builder, and the glass effect.
+import { open as openFile, save as saveFile } from "@tauri-apps/plugin-dialog";
 import { openPath } from "@tauri-apps/plugin-opener";
+import { useState } from "react";
 import { toast, toastError } from "../../components/Toasts";
 import { Button, IconButton } from "../../components/ui/controls";
+import { Confirm } from "../../components/ui/Dialog";
 import { Icon } from "../../components/ui/Icon";
-import { themesFolder } from "../../ipc";
-import { BUILT_IN_THEMES, cssColor, DEFAULT_THEME_ID, glassColor, type Theme } from "../../lib/themes";
+import { Menu, MenuDivider, MenuItem, type Point } from "../../components/ui/Menu";
+import { themeExport, themesFolder } from "../../ipc";
+import { BUILT_IN_THEMES, cssColor, DEFAULT_THEME_ID, glassColor, serializeTheme, type Theme } from "../../lib/themes";
 import { Row, Section } from "../settings/rows";
 import { useSettings } from "../settings/store";
 import ss from "../settings/settings.module.css";
 import s from "./appearance.module.css";
 import { useAppearance } from "./store";
+import { ThemeEditor } from "./ThemeEditor";
 
 /** Import from a picked file path or a dropped file's text, with a notice either way. */
 export async function importTheme(source: { path: string } | { text: string }) {
@@ -23,17 +28,49 @@ export async function importTheme(source: { path: string } | { text: string }) {
   }
 }
 
+/** Save a theme's JSON file where the user chooses. */
+async function exportTheme(t: Theme) {
+  try {
+    const path = await saveFile({
+      title: `Export ${t.name}`,
+      defaultPath: `${t.id}.theme.json`,
+      filters: [{ name: "Theme", extensions: ["json"] }],
+    });
+    if (!path) return;
+    await themeExport(path, serializeTheme(t));
+    toast(`${t.name} exported`);
+  } catch (e) {
+    toastError(e);
+  }
+}
+
 export function AppearancePage() {
-  const { imported, hasBlur, remove } = useAppearance();
+  const { imported, hasBlur, remove, duplicate } = useAppearance();
   const themeId = useSettings((st) => st.settings.themeId);
   const glass = useSettings((st) => st.settings.glass);
   const set = useSettings((st) => st.set);
   const themes = [...BUILT_IN_THEMES, ...imported];
+  const [editing, setEditing] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<Theme | null>(null);
 
   const pick = async () => {
     const path = await openFile({ multiple: false, filters: [{ name: "Theme", extensions: ["json"] }] });
     if (typeof path === "string") await importTheme({ path });
   };
+
+  /** Built-in themes can't change: editing one edits a copy. The edited theme is selected so the app shows it. */
+  const edit = async (t: Theme, copyName?: string) => {
+    try {
+      const target = t.builtIn || copyName ? await duplicate(t, copyName) : t;
+      set("themeId", target.id);
+      setEditing(target.id);
+    } catch (e) {
+      toastError(e);
+    }
+  };
+
+  const editingTheme = imported.find((t) => t.id === editing);
+  if (editingTheme) return <ThemeEditor key={editingTheme.id} theme={editingTheme} onDone={() => setEditing(null)} />;
 
   return (
     <>
@@ -47,9 +84,29 @@ export function AppearancePage() {
               selected={t.id === themeId}
               glass={glass}
               onSelect={() => set("themeId", t.id)}
-              onRemove={t.builtIn ? undefined : () => void remove(t.id).catch(toastError)}
+              onEdit={() => void edit(t)}
+              onDuplicate={() =>
+                void duplicate(t)
+                  .then((c) => toast(`${c.name} created`))
+                  .catch(toastError)
+              }
+              onExport={() => void exportTheme(t)}
+              onRemove={t.builtIn ? undefined : () => setRemoving(t)}
             />
           ))}
+          <button
+            type="button"
+            className={s.card}
+            onClick={() => void edit(themes.find((t) => t.id === themeId) ?? BUILT_IN_THEMES[0], "My theme")}
+          >
+            <div className={s.importBox}>
+              <Icon name="edit" size={24} />
+            </div>
+            <div className={s.cardName}>
+              <span>New theme</span>
+              <small>From the current one</small>
+            </div>
+          </button>
           <button type="button" className={s.card} onClick={() => void pick()}>
             <div className={s.importBox}>
               <Icon name="plus" size={26} />
@@ -96,6 +153,15 @@ export function AppearancePage() {
           <Button onClick={async () => void openPath(await themesFolder()).catch(toastError)}>Open folder</Button>
         </Row>
       </Section>
+      {removing && (
+        <Confirm
+          title={`Remove ${removing.name}?`}
+          message="Its file is deleted from AvaTG's themes folder. Export it first to keep a copy."
+          action="Remove theme"
+          onConfirm={() => void remove(removing.id).catch(toastError)}
+          onClose={() => setRemoving(null)}
+        />
+      )}
     </>
   );
 }
@@ -106,14 +172,26 @@ function ThemeCard({
   selected,
   glass,
   onSelect,
+  onEdit,
+  onDuplicate,
+  onExport,
   onRemove,
 }: {
   theme: Theme;
   selected: boolean;
   glass: number;
   onSelect: () => void;
+  onEdit: () => void;
+  onDuplicate: () => void;
+  onExport: () => void;
+  /** only for your own themes */
   onRemove?: () => void;
 }) {
+  const [menu, setMenu] = useState<{ at: Point; anchor: HTMLElement } | null>(null);
+  const run = (f: () => void) => () => {
+    setMenu(null);
+    f();
+  };
   const c = theme.colors;
   const color = (k: keyof Theme["colors"]) => cssColor(c[k]);
   return (
@@ -144,10 +222,42 @@ function ThemeCard({
         </div>
         <div className={s.cardName}>
           <span>{theme.name}</span>
-          <small>{theme.id === DEFAULT_THEME_ID ? "Default" : theme.builtIn ? "Built in" : "Imported"}</small>
+          <small>{theme.id === DEFAULT_THEME_ID ? "Default" : theme.builtIn ? "Built in" : "Your own"}</small>
         </div>
       </button>
-      {onRemove && <IconButton className={s.remove} icon="x" label={`Remove ${theme.name}`} small onClick={onRemove} />}
+      <IconButton
+        className={s.more}
+        icon="more"
+        label={`${theme.name}: edit, duplicate, export`}
+        small
+        aria-expanded={!!menu}
+        onClick={(e) => {
+          if (menu) return setMenu(null);
+          const r = e.currentTarget.getBoundingClientRect();
+          setMenu({ at: { x: r.left, y: r.bottom + 6 }, anchor: e.currentTarget });
+        }}
+      />
+      {menu && (
+        <Menu
+          at={menu.at}
+          anchor={menu.anchor}
+          onClose={() => setMenu(null)}
+          label={`${theme.name} actions`}
+          width={200}
+        >
+          <MenuItem onSelect={run(onEdit)}>{theme.builtIn ? "Edit a copy…" : "Edit…"}</MenuItem>
+          <MenuItem onSelect={run(onDuplicate)}>Duplicate</MenuItem>
+          <MenuItem onSelect={run(onExport)}>Export…</MenuItem>
+          {onRemove && (
+            <>
+              <MenuDivider />
+              <MenuItem danger onSelect={run(onRemove)}>
+                Remove…
+              </MenuItem>
+            </>
+          )}
+        </Menu>
+      )}
     </div>
   );
 }

@@ -48,7 +48,25 @@ reopened; columns **reorder, resize and hide like Dolphin/Explorer**.
 | 13 | Contrast test for built-in themes (Fg2/Fg3 ≥ 4.5:1) | done (Fg2/Fg3 on every surface: window, panels, bars, selection, hover, fields) |
 | 14 | Linux: applications-menu entry for the AppImage, AppImage-safe autostart path, self-repair at startup | done, not tried with a real AppImage yet |
 | 15 | Windows: the uninstaller removes the login entry (NSIS hook) | nothing to add: Tauri's NSIS uninstaller already deletes `HKCU\…\Run` "AvaTG" (the name tauri-plugin-autostart uses, productName) and skips it during updates (checked against tauri-bundler's installer.nsi, 2026-11-16) |
-| 16 | Theme builder in Settings › Appearance: pick each colour with a live preview that shows where it is used; it writes the theme's JSON file as you edit. Theme cards get Edit, Duplicate, Export, Import (owner request, 2026-11-15) | todo |
+| 16 | Theme builder in Settings › Appearance: pick each colour with a live preview that shows where it is used; it writes the theme's JSON file as you edit. Theme cards get Edit, Duplicate, Export, Import (owner request, 2026-11-15) | done (design choices below are Claude's, for the owner to review) |
+
+Choices made while building these (2026-11-16, not yet seen by the owner; change freely):
+- **Columns**: Name fills the spare width until you resize it, then keeps its width (Explorer-like). Widths,
+  order, visibility, sort and both filters are saved; the search is not. Header right-click: show/hide columns,
+  Move left/right, Reset columns. Column headings are uppercase like before.
+- **Detail panel**: 196 px (token `--h-panel`), tabs General / Format / Log; the Log is this session's yt-dlp
+  output (not saved). A "Details" chip in the status bar and "Show details" in the row menu reopen it.
+- **Warnings as toasts**: each distinct yt-dlp warning once per session (video ids stripped), so a playlist
+  doesn't flood. They fade like other notices.
+- **Duplicates**: Rename puts " (2)" after the title in the file name and on the row; Replace deletes the old
+  file and row before downloading again. The channel Playlists tab is not checked (its videos are unknown until
+  the playlists are read).
+- **Theme builder**: Settings › Appearance › a card's "⋯" menu (Edit / Edit a copy… for built-ins, Duplicate,
+  Export…, Remove… with a confirmation) and a "New theme" card that copies the current theme. The editor lists
+  every token in groups with a swatch (system colour picker), an opacity slider and the `#AARRGGBB` value, next to
+  a live preview built from the real controls; pointing at a colour outlines where it is used. It saves to
+  `<id>.theme.json` 0.3 s after each change and the app shows it at once (the edited theme is selected). Renaming
+  keeps the file id. Contrast warnings show under the preview.
 
 ## How to work
 

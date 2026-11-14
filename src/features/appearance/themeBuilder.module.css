@@ -1,0 +1,344 @@
+/* The theme builder: colour list on the left, live preview on the right. The preview's colours come from the
+   theme being edited (CSS variables set on .previewWindow), so everything inside uses the usual tokens. */
+
+.editor {
+  /* resolved here, with the app's colours, so the outline stays visible whatever the edited theme looks like */
+  --hl-ring: var(--fg);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.editorHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.nameField {
+  width: 240px;
+}
+.saved {
+  margin-left: auto;
+  font-size: var(--fs-help);
+  color: var(--fg3);
+}
+.editorBody {
+  display: grid;
+  grid-template-columns: minmax(380px, 1fr) minmax(420px, 1.1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.tokenList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.group h3 {
+  margin: 0 0 6px;
+  font-size: var(--fs-head);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--fg3);
+}
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: var(--r-md);
+}
+.colorRow[data-focused] {
+  background: var(--hover);
+}
+.swatch {
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.swatch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+/* A checkerboard under the colour, so its opacity shows. */
+.swatchChecker {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--line);
+  background: repeating-conic-gradient(var(--fg3) 0 25%, transparent 0 50%) 0 0 / 10px 10px;
+}
+.swatchChecker > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.swatch:focus-within .swatchChecker {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.colorText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.colorText b {
+  font-size: var(--fs-small);
+  font-weight: 600;
+}
+.colorText small {
+  font-size: var(--fs-path);
+  color: var(--fg3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.alpha {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-help);
+  color: var(--fg2);
+  font-variant-numeric: tabular-nums;
+}
+.alpha input {
+  width: 84px;
+  accent-color: var(--accent);
+}
+.alpha span {
+  width: 34px;
+  text-align: right;
+}
+.hex {
+  width: 112px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.previewColumn {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.previewHint {
+  margin: 0;
+  font-size: var(--fs-help);
+  color: var(--fg3);
+}
+.warning {
+  margin: 0;
+  font-size: var(--fs-help);
+  color: var(--warn);
+}
+
+/* --- the preview window --- */
+.previewBackdrop {
+  padding: 18px;
+  border-radius: var(--r-2xl);
+}
+.previewWindow {
+  color: var(--fg);
+  font-size: var(--fs-small);
+}
+.pvFrame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-xl);
+  background: var(--glass);
+  box-shadow: inset 0 0 0 1px var(--edge);
+}
+.pvTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--hair);
+  background: var(--bar);
+}
+.pvSearch {
+  width: 170px;
+}
+.pvSpacer {
+  flex: 1;
+}
+.pvHead {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 18px 4px 52px;
+  font-size: var(--fs-head);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--fg3);
+}
+.pvHead span:last-child {
+  width: 150px;
+}
+.pvRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 2px 8px;
+  padding: 6px 10px;
+  border-radius: var(--r-md);
+}
+.pvSel {
+  background: var(--sel);
+}
+.pvHover {
+  background: var(--hover);
+}
+.pvThumb {
+  width: 44px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+.pvName {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.pvName b {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pvName small {
+  font-size: var(--fs-path);
+  color: var(--fg3);
+}
+.pvStatus {
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-path);
+}
+.pvStatus small {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+.pvAccent {
+  color: var(--accent);
+}
+.pvWarn {
+  color: var(--warn);
+}
+.pvOk {
+  color: var(--ok);
+}
+.pvBad {
+  color: var(--bad);
+}
+.pvFg2 {
+  color: var(--fg2);
+}
+.pvPanel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 6px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--hair);
+  background: var(--panel);
+}
+.pvStats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pvStats small {
+  font-size: var(--fs-head);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--fg3);
+}
+.pvLog {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+  background: var(--field);
+  color: var(--fg2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-path);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pvStatusBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-top: 1px solid var(--hair);
+  background: var(--bar);
+  color: var(--fg3);
+  font-size: var(--fs-help);
+}
+.pvChip {
+  padding: 1px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  color: var(--fg2);
+}
+.pvChipOn {
+  border-color: var(--accent);
+  background: var(--sel);
+  color: var(--fg);
+  font-weight: 600;
+}
+.pvScrim {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 12%;
+  background: var(--scrim);
+  pointer-events: none;
+}
+.pvMenu {
+  position: absolute;
+  right: 16px;
+  top: 56px;
+  width: 170px;
+  padding: 6px;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--line);
+  background: var(--menu);
+  box-shadow: var(--shadow-menu);
+  font-size: var(--fs-small);
+}
+.pvMenu > div {
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+}
+.pvMenuHover {
+  background: var(--hover);
+}
+
+/* Outlined parts while a colour in the list is pointed at. */
+.previewWindow [data-hl] {
+  outline: 2px solid var(--hl-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    outline-color: transparent;
+  }
+}

@@ -102,6 +102,7 @@ pub fn run() {
             themes::theme_read,
             themes::theme_save,
             themes::theme_remove,
+            themes::theme_export,
             themes::themes_folder,
             updater::update_check,
             updater::update_install,

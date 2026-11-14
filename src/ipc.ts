@@ -126,6 +126,8 @@ export const themeRead = (path: string) => invoke<string>("theme_read", { path }
 export const themeSave = (id: string, text: string) => invoke<void>("theme_save", { id, text });
 export const themeRemove = (id: string) => invoke<void>("theme_remove", { id });
 export const themesFolder = () => invoke<string>("themes_folder");
+/** Writes a theme's JSON to a path picked with the save dialog. */
+export const themeExport = (path: string, text: string) => invoke<void>("theme_export", { path, text });
 
 // tray.rs
 export const updateTray = (tooltip: string, allPaused: boolean) => invoke<void>("tray_update", { tooltip, allPaused });

@@ -57,6 +57,15 @@ const PATHS = {
   minimize: <path d="M6 12h12" />,
   maximize: <rect x="6" y="6" width="12" height="12" rx="1.5" />,
   download: <path d="M12 4v12M6 10l6 6 6-6M5 20h14" />,
+  upload: <path d="M12 16V4M6 10l6-6 6 6M5 20h14" />,
+  more: <path d="M5.5 12h.01M12 12h.01M18.5 12h.01" strokeWidth={3.2} />,
+  edit: <path d="M4 20h4L19 9l-4-4L4 16v4ZM13.5 6.5l4 4" />,
+  copy: (
+    <>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3" />
+    </>
+  ),
 } as const;
 
 export type IconName = keyof typeof PATHS;

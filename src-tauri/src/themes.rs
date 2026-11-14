@@ -79,6 +79,19 @@ pub fn theme_remove(app: AppHandle, id: String) -> Result<(), String> {
     }
 }
 
+/// Write a theme's JSON to a file the user chose with the save dialog ("Export…").
+#[tauri::command]
+pub fn theme_export(path: String, text: String) -> Result<(), String> {
+    if text.len() as u64 > MAX_THEME_BYTES {
+        return Err("This theme is too big".into());
+    }
+    let path = PathBuf::from(path);
+    if path.extension().is_none_or(|e| e != "json") {
+        return Err("Save the theme as a .json file".into());
+    }
+    std::fs::write(path, text).map_err(|e| e.to_string())
+}
+
 /// The themes folder, for "Open folder".
 #[tauri::command]
 pub fn themes_folder(app: AppHandle) -> Result<String, String> {
