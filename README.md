@@ -68,10 +68,13 @@ src-tauri/src/proxy.rs     the proxy setting and reading the desktop's proxy
 src-tauri/src/blur.rs      glass blur behind the window (Wayland ext_background_effect, KWin, window-vibrancy)
 src-tauri/src/tray.rs      tray menu, close to tray
 src-tauri/src/updater.rs   AvaTG's own updates from GitHub releases
+src-tauri/src/desktop.rs   Linux AppImage applications-menu entry; repairs it and the login item at startup
 src/ipc.ts                 every Rust command and event, typed
 src/lib/                   pure logic with tests: presets → yt-dlp args, links, formatting, tool versions
 src/features/              downloads, picker (video dialog, playlist/channel page), settings, tools, updates
-src/components/            window chrome and shared controls; src/styles/tokens.css is the theme
+src/components/            window chrome, shared controls, DataTable (columns, sorting, virtual rows), DetailPanel;
+                           src/styles/tokens.css is the theme
+src/dev/                   dev only: ?demo (browser run with mocked Rust commands) and ?gallery; never in releases
 ```
 
 Design rule: Rust only runs processes and manages files. All yt-dlp format and preset logic is in TypeScript.

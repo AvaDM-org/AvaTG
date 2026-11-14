@@ -5,6 +5,8 @@
 - Features belong to the owner. Ask before inventing new UI rules, and record the decisions in `PROGRESS.md`.
   The design is AvaDM's (`/data/projects/AvaDM/docs/DESIGN.md`); mockups live in the canvas linked in PROGRESS.md.
   Design changes go on the canvas first when the owner asks for that.
+- UI checks without a real download: `bun run dev`, then `http://127.0.0.1:1420/?demo` (mocked Rust commands,
+  `src/dev/demo.ts`; add a mock there for every new command) or `?gallery`.
 - Run `bun run check` before every commit (tsc, eslint, vitest, rustfmt, clippy -D warnings, cargo test).
 - Rust (`src-tauri/src`) only runs processes and manages files. Put yt-dlp format and preset logic in
   `src/lib/presets.ts` and metadata parsing in `src/lib/youtube.ts`, not in Rust. Every Rust command has a typed

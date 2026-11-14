@@ -13,6 +13,8 @@ Code: https://github.com/AvaDM-org/AvaTG (public, branch `main`). The local fold
 - Design canvas (all screens, Dark glass and Cherry dark): https://claude.ai/artifact/QkT75qvfYzuqEXLTHNdXEo
 
 ### Next
+0. Owner reviews the AvaDM feature port (below, all 16 items committed locally on 2026-11-16, not pushed) in the
+   real app, especially the choices listed under the table.
 1. Owner publishes the `v0.1.0` draft. Then test a real self-update: release `v0.1.1` (bump the three version
    fields, CHANGELOG entry, tag), run 0.1.0 as an AppImage on Linux and update it from the notice.
 2. Test the installers on Windows and macOS (nothing has run there yet; macOS builds are unsigned, so users need
@@ -125,12 +127,17 @@ Choices made while building these (2026-11-16, not yet seen by the owner; change
 - Rolling log files with "Open log folder", and a crash report that opens a prefilled GitHub issue.
 - Tray menu listing running downloads with Pause/Resume (the tray has Open, Pause all, Add link from clipboard, Quit).
 - Middle truncation of long titles (now: end ellipsis) and full-text tooltips on everything truncated.
-- Column header menu (show/hide, reorder, resize columns) and persisted sort/filter.
 - Pause/Cancel while an AvaTG update downloads (Tauri's updater downloads in one go).
 - Blur on X11 sessions (`_KDE_NET_WM_BLUR_BEHIND_REGION`); Windows/macOS blur is written but untested.
-- A suffix for two different videos with the same title in one folder (yt-dlp now skips the second).
+- A suffix for two *different* videos with the same title in one folder (yt-dlp skips the second). The same video
+  twice is handled now (Rename).
 
 ## Not verified yet
+
+- Feature port, in the real Tauri app (checked only in the browser demo): column drag/resize in WebKitGTK, the
+  detail panel with a real download's log, warning toasts, Import list › From file…, free space, Skip/Rename/
+  Replace with real files, the theme builder's colour picker (GTK dialog) and Export….
+- The AppImage applications-menu entry and the startup repair of it and of the login item (needs an AppImage).
 
 - Tray: menu actions, tooltip, `--minimized` login launch; single instance.
 - Drag and drop from Firefox and Chrome (`dragDropEnabled: false`), and dropping a theme `.json`.
