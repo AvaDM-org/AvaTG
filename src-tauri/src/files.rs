@@ -51,6 +51,17 @@ pub fn file_sizes(paths: Vec<String>) -> Vec<Option<u64>> {
         .collect()
 }
 
+/// Free space on the disk that holds `path`, in bytes. The folder may not exist yet (a new playlist folder),
+/// so the nearest existing parent is asked.
+#[tauri::command]
+pub fn free_space(path: String) -> Result<u64, String> {
+    let mut dir = Path::new(&path);
+    while !dir.exists() {
+        dir = dir.parent().ok_or("No such folder")?;
+    }
+    fs4::available_space(dir).map_err(|e| e.to_string())
+}
+
 /// Lists of links bigger than this are refused (a list of 2 MB is tens of thousands of links).
 const MAX_LIST_BYTES: u64 = 2 * 1024 * 1024;
 
@@ -101,5 +112,11 @@ mod tests {
             vec![Some(1), None]
         );
         std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn free_space_of_a_folder_that_does_not_exist_yet() {
+        let missing = std::env::temp_dir().join("avatg-no-such-folder/inner");
+        assert!(free_space(missing.to_string_lossy().into_owned()).unwrap() > 0);
     }
 }

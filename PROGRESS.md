@@ -43,7 +43,7 @@ reopened; columns **reorder, resize and hide like Dolphin/Explorer**.
 | 8 | Detail panel: General / Format / Log tabs, action column, selection summary for several rows | done |
 | 9 | "N interrupted · Resume" status-bar chip | done |
 | 10 | Import links from a file (Add link › Import list: From clipboard / From file…), dropping `.list/.lst/.url` too | done |
-| 11 | Free disk space under Save to (one shared folder field for the video dialog and the playlist page) | todo |
+| 11 | Free disk space under Save to (one shared folder field for the video dialog and the playlist page) | done |
 | 12 | Already downloaded / already in the list: inline warning with Skip / Rename / Replace | todo |
 | 13 | Contrast test for built-in themes (Fg2/Fg3 ≥ 4.5:1) | todo |
 | 14 | Linux: applications-menu entry for the AppImage, AppImage-safe autostart path, self-repair at startup | todo |

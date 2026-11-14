@@ -79,6 +79,8 @@ export const deleteParts = (dir: string) => invoke<void>("delete_parts", { dir }
 export const deleteFiles = (paths: string[]) => invoke<void>("delete_files", { paths });
 /** Each file's size in bytes, or null when it doesn't exist. */
 export const fileSizes = (paths: string[]) => invoke<(number | null)[]>("file_sizes", { paths });
+/** Free space in bytes on the disk that holds this folder (or would hold it). */
+export const freeSpace = (path: string) => invoke<number>("free_space", { path });
 /** The text of a list of links the user picked (at most 2 MB). */
 export const readLinkList = (path: string) => invoke<string>("read_link_list", { path });
 export const renameDescription = (videoPath: string) => invoke<void>("rename_description", { videoPath });

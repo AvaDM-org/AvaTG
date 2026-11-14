@@ -1,13 +1,13 @@
 // One video: thumbnail header, format options, folder, Download.
 import { useState } from "react";
-import { Button, Field, IconButton, TextField } from "../../components/ui/controls";
+import { Button } from "../../components/ui/controls";
 import { Dialog } from "../../components/ui/Dialog";
 import { fmtBytes, fmtDuration } from "../../lib/format";
 import type { VideoInfo } from "../../lib/youtube";
 import { queueVideos } from "../downloads/enqueue";
 import { useSettings } from "../settings/store";
-import { chooseFolder } from "../settings/chooseFolder";
 import { FormatOptions, PresetMenu } from "./FormatOptions";
+import { SaveToField } from "./SaveToField";
 import { usePicker } from "./store";
 import s from "./picker.module.css";
 
@@ -94,21 +94,7 @@ export function VideoDialog({ info }: { info: VideoInfo }) {
         </div>
       )}
       <FormatOptions preset={preset} onChange={setPreset} heights={info.heights} subtitles={info.subtitles} />
-      <Field label="Save to">
-        <TextField
-          label="Save to"
-          value={dir}
-          onChange={setDir}
-          trailing={
-            <IconButton
-              icon="folder"
-              label="Choose folder"
-              small
-              onClick={async () => setDir((await chooseFolder(dir)) ?? dir)}
-            />
-          }
-        />
-      </Field>
+      <SaveToField dir={dir} onChange={setDir} needBytes={size} />
     </Dialog>
   );
 }

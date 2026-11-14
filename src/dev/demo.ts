@@ -171,6 +171,7 @@ const handlers: Record<string, (a: Args) => unknown> = {
   },
   ytdlp_json: (a) => fakeVideoJson(String(a.url)),
   file_sizes: (a) => (a.paths as string[]).map(() => 123_456_789),
+  free_space: () => 182_400_000_000,
   window_blur: () => false,
   system_proxy: () => null,
   install_channel: () => "auto",

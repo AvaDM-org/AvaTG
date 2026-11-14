@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DragSpace, TopBar } from "../../components/layout";
 import { WindowControls } from "../../components/WindowControls";
-import { Button, Checkbox, Field, IconButton, Switch, TextField } from "../../components/ui/controls";
+import { Button, Checkbox, IconButton, Switch, TextField } from "../../components/ui/controls";
 import { Icon } from "../../components/ui/Icon";
 import { fmtDuration, fmtTotalLength, plural } from "../../lib/format";
 import type { ChannelInfo, Entry, PlaylistInfo } from "../../lib/youtube";
 import { fromEntry, queuePlaylists, queueVideos } from "../downloads/enqueue";
-import { chooseFolder } from "../settings/chooseFolder";
+import { SaveToField } from "./SaveToField";
 import { useSettings } from "../settings/store";
 import { FormatOptions, PresetMenu } from "./FormatOptions";
 import { usePicker } from "./store";
@@ -285,21 +285,7 @@ export function CollectionPage({ info, statusBar }: { info: PlaylistInfo | Chann
               <PresetMenu preset={preset} onChange={setPreset} />
             </div>
             <FormatOptions preset={preset} onChange={setPreset} compact />
-            <Field label="Save to">
-              <TextField
-                label="Save to"
-                value={dir}
-                onChange={setDir}
-                trailing={
-                  <IconButton
-                    icon="folder"
-                    label="Choose folder"
-                    small
-                    onClick={async () => setDir((await chooseFolder(dir)) ?? dir)}
-                  />
-                }
-              />
-            </Field>
+            <SaveToField dir={dir} onChange={setDir} />
             <label className={s.switchRow}>
               <span>{isChannel ? "Own folder for each playlist" : "Own folder for this playlist"}</span>
               <Switch label="Own folder" checked={settings.playlistFolder} onChange={(v) => set("playlistFolder", v)} />

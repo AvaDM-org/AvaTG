@@ -86,6 +86,7 @@ pub fn run() {
             files::delete_files,
             files::file_sizes,
             files::read_link_list,
+            files::free_space,
             files::rename_description,
             tray::tray_update,
             tray::set_close_to_tray,
