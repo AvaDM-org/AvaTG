@@ -1,6 +1,6 @@
 [package]
 name = "avatg"
-version = "0.2.1"
+version = "0.2.2"
 description = "Simple YouTube downloader (yt-dlp + ffmpeg + Deno)"
 authors = ["you"]
 edition = "2024"

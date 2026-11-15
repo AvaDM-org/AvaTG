@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.2.2] - 2026-11-15
 
 ### Fixed
 - Windows: yt-dlp's messages and video titles showed "�" in place of characters like ’ (yt-dlp now writes UTF-8).
