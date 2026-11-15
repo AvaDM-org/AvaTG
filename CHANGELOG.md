@@ -8,6 +8,8 @@
   for cookies in Settings › Files › Account) instead of showing yt-dlp's command-line advice.
 - Windows: "Could not copy Chrome cookie database" now explains that Chrome, Edge and other Chromium browsers lock
   and encrypt their cookies on Windows, and suggests Firefox. Choosing one of them for cookies shows the same warning.
+- Narrow windows: the top bar no longer pushed the minimize, maximize and close buttons out of the window. Below
+  1120 px the filters show their name or value only and the selection buttons only their icons.
 - The Linux AppImage's removal of the bundled system libraries (the crash fix listed under 0.2.1) did not run for
   the 0.2.1 release; it is in this one.
 

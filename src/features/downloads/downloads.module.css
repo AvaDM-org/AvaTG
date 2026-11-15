@@ -174,3 +174,20 @@
   color: var(--fg);
   font-size: 16px;
 }
+
+/* Narrow windows (down to the 900 px minimum), so the window buttons always fit: a filter shows its name while it
+   is "All" and its value once set; Sort shows its icon and value; the selection buttons show only their icons
+   (their names are the tooltips). */
+@media (max-width: 1120px) {
+  .search {
+    width: 190px;
+  }
+  .trigger[data-all] b,
+  .trigger:not([data-all]) span,
+  .label {
+    display: none;
+  }
+  .trigger[data-all] span {
+    color: var(--fg);
+  }
+}

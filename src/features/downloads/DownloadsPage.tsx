@@ -128,23 +128,30 @@ export function DownloadsPage({
             <div className={s.vdivider} />
             <Button
               icon="play"
+              title="Resume"
               disabled={!selectedItems.some((d) => ["paused", "interrupted", "failed", "cancelled"].includes(d.status))}
               onClick={() => resume(ids(selectedItems))}
             >
-              Resume
+              <span className={s.label}>Resume</span>
             </Button>
             <Button
               icon="pause"
+              title="Pause"
               disabled={!selectedItems.some((d) => d.status === "running" || d.status === "queued")}
               onClick={() => pause(ids(selectedItems))}
             >
-              Pause
+              <span className={s.label}>Pause</span>
             </Button>
-            <Button icon="folder" onClick={() => void showInFolder(selectedItems[0])}>
-              Show in folder
+            <Button icon="folder" title="Show in folder" onClick={() => void showInFolder(selectedItems[0])}>
+              <span className={s.label}>Show in folder</span>
             </Button>
-            <Button variant="danger" icon="trash" onClick={() => setAsk({ kind: "remove", items: selectedItems })}>
-              Remove
+            <Button
+              variant="danger"
+              icon="trash"
+              title="Remove"
+              onClick={() => setAsk({ kind: "remove", items: selectedItems })}
+            >
+              <span className={s.label}>Remove</span>
             </Button>
             <DragSpace />
             <Button variant="text" onClick={() => setSelected(new Set())} title="Esc">
@@ -168,7 +175,13 @@ export function DownloadsPage({
               label="Filter by status"
               width={232}
               trigger={({ open, toggle }) => (
-                <button type="button" className={s.trigger} aria-expanded={open} onClick={toggle}>
+                <button
+                  type="button"
+                  className={s.trigger}
+                  data-all={view.status === "all" || undefined}
+                  aria-expanded={open}
+                  onClick={toggle}
+                >
                   <span>Status</span>
                   <b>{statusLabel}</b>
                   <Icon name="chevronDown" size={14} />
@@ -198,7 +211,13 @@ export function DownloadsPage({
               label="Filter by type"
               width={200}
               trigger={({ open, toggle }) => (
-                <button type="button" className={s.trigger} aria-expanded={open} onClick={toggle}>
+                <button
+                  type="button"
+                  className={s.trigger}
+                  data-all={view.type === "all" || undefined}
+                  aria-expanded={open}
+                  onClick={toggle}
+                >
                   <span>Type</span>
                   <b>{typeLabel}</b>
                   <Icon name="chevronDown" size={14} />

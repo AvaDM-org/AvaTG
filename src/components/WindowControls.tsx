@@ -6,7 +6,7 @@ import { IconButton } from "./ui/controls";
 export function WindowControls() {
   const win = getCurrentWindow();
   return (
-    <div style={{ display: "flex", gap: 4, marginLeft: 4 }}>
+    <div style={{ display: "flex", gap: 4, marginLeft: 4, flexShrink: 0 }}>
       <IconButton icon="minimize" label="Minimize" small ghost onClick={() => void win.minimize()} />
       <IconButton icon="maximize" label="Maximize" small ghost onClick={() => void win.toggleMaximize()} />
       <IconButton icon="x" label="Close" small ghost onClick={() => void win.close()} />

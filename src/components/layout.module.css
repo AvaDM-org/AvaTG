@@ -21,6 +21,11 @@
   border-bottom: 1px solid var(--hair);
   background: var(--bar);
 }
+/* Nothing in the bar is squeezed (the window buttons stay whole); pages compact their own content when narrow.
+   Zero specificity, so a part that should shrink (a long title) says so with its own class. */
+:where(.topbar) > * {
+  flex-shrink: 0;
+}
 
 .statusbar {
   height: 32px;
