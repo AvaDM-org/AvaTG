@@ -12,6 +12,7 @@ import { WindowControls } from "../../components/WindowControls";
 import { Button, IconButton, ProgressBar, Segmented, Stepper, Switch, TextField } from "../../components/ui/controls";
 import { Icon } from "../../components/ui/Icon";
 import { Dropdown, MenuItem } from "../../components/ui/Menu";
+import { CHROMIUM_BROWSERS, isWindows } from "../../lib/platform";
 import { menuEntryStatus, openExternal, setMenuEntry, systemProxy, toolsDir } from "../../ipc";
 import { fmtBytes } from "../../lib/format";
 import logo from "../../assets/avatg-logo.png";
@@ -359,7 +360,12 @@ function FilesPage() {
       <Section heading="ACCOUNT">
         <Row
           title="Use cookies from"
-          desc="For age-restricted and members-only videos, and when YouTube asks to confirm you're not a bot. Read from the browser, never stored"
+          desc={
+            isWindows && CHROMIUM_BROWSERS.includes(cookies)
+              ? "On Windows this browser locks and encrypts its cookies, so AvaTG can't read them. Use Firefox"
+              : "For age-restricted and members-only videos, and when YouTube asks to confirm you're not a bot. Read from the browser, never stored"
+          }
+          descTone={isWindows && CHROMIUM_BROWSERS.includes(cookies) ? "warn" : undefined}
         >
           <Dropdown
             label="Browser"

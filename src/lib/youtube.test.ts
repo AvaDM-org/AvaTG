@@ -12,6 +12,14 @@ describe("explainError", () => {
     expect(out).not.toContain("--cookies");
   });
 
+  it("explains Chromium cookies on Windows", () => {
+    for (const raw of [
+      "Could not copy Chrome cookie database. See  https://github.com/yt-dlp/yt-dlp/issues/7271  for more info",
+      "WARNING: failed to decrypt with DPAPI",
+    ])
+      expect(explainError(raw)).toMatch(/^AvaTG could not read the browser's cookies.*Firefox/);
+  });
+
   it("explains age-restricted and members-only videos", () => {
     expect(explainError("abc: Sign in to confirm your age. Use --cookies for the authentication.")).toMatch(
       /^This video is age-restricted/,

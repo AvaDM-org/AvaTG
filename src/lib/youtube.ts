@@ -228,6 +228,10 @@ export async function playlistEntries(url: string, cookies: string): Promise<Pla
 
 const COOKIES_HINT = "In Settings › Files › Account, choose a browser where you are signed in to YouTube";
 
+/** yt-dlp issues 7271 and 10927: Chromium browsers on Windows lock their cookie database and encrypt it for themselves. */
+const CHROMIUM_COOKIES =
+  "AvaTG could not read the browser's cookies. On Windows, Chrome, Edge and other Chromium browsers lock and encrypt them so other programs can't read them. In Settings › Files › Account, choose Firefox (signed in to YouTube there).";
+
 /**
  * yt-dlp's error lines in words for AvaTG users. yt-dlp's own advice is for its command line
  * ("Use --cookies-from-browser…"), so the cases with an AvaTG setting point at that setting instead.
@@ -236,6 +240,8 @@ export function explainError(msg: string): string {
   return msg
     .split("\n")
     .map((line) => {
+      if (/could not copy .*cookie database|failed to decrypt with DPAPI|cookies? .*permission denied/i.test(line))
+        return CHROMIUM_COOKIES;
       if (/sign in to confirm you.{0,3}re not a bot/i.test(line))
         return `YouTube wants to confirm you're not a bot. This happens on some networks and VPNs. ${COOKIES_HINT}, or try another network.`;
       if (/sign in to confirm your age|age[- ]restricted/i.test(line))
