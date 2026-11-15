@@ -8,7 +8,7 @@ import { Icon } from "../../components/ui/Icon";
 import { toast } from "../../components/Toasts";
 import { fmtDuration, fmtTotalLength, plural } from "../../lib/format";
 import { formatLabel } from "../../lib/presets";
-import type { ChannelInfo, Entry, PlaylistInfo } from "../../lib/youtube";
+import { explainError, type ChannelInfo, type Entry, type PlaylistInfo } from "../../lib/youtube";
 import type { DuplicateChoice } from "../downloads/duplicates";
 import { fromEntry, queuePlaylists, queueWithChoice, targetDir, type PickedVideo } from "../downloads/enqueue";
 import { useDuplicates } from "../downloads/useDuplicates";
@@ -122,7 +122,7 @@ export function CollectionPage({ info, statusBar }: { info: PlaylistInfo | Chann
           setBusy(`Reading playlists ${n} of ${pickedPlaylists.length}…`),
         );
       } catch (e) {
-        setError(String(e));
+        setError(explainError(String(e)));
         setBusy(null);
         return;
       }

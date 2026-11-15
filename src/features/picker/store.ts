@@ -2,7 +2,7 @@
 // or a playlist/channel page. Several pasted or dropped links become a plain list of videos.
 import { create } from "zustand";
 import type { Analysis, Entry, PlaylistInfo } from "../../lib/youtube";
-import { analyze, classify } from "../../lib/youtube";
+import { analyze, classify, explainError } from "../../lib/youtube";
 import { getSettings } from "../settings/store";
 
 type PickerState =
@@ -74,5 +74,5 @@ async function analyzeMany(links: string[], cookies: string): Promise<PlaylistIn
 }
 
 function cleanError(msg: string): string {
-  return msg.replace(/^Error:\s*/, "").replace(/^ERROR:\s*(\[[^\]]+\]\s*)?/gm, "");
+  return explainError(msg.replace(/^Error:\s*/, "").replace(/^ERROR:\s*(\[[^\]]+\]\s*)?/gm, ""));
 }

@@ -359,7 +359,7 @@ function FilesPage() {
       <Section heading="ACCOUNT">
         <Row
           title="Use cookies from"
-          desc="For age-restricted and members-only videos. Read from the browser, never stored"
+          desc="For age-restricted and members-only videos, and when YouTube asks to confirm you're not a bot. Read from the browser, never stored"
         >
           <Dropdown
             label="Browser"

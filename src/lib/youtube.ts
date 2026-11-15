@@ -225,3 +225,25 @@ export async function analyze(raw: string, cookies: string): Promise<Analysis> {
 export async function playlistEntries(url: string, cookies: string): Promise<PlaylistInfo> {
   return parsePlaylist((await ytdlpJson(url, true, cookies)) as Json);
 }
+
+const COOKIES_HINT = "In Settings › Files › Account, choose a browser where you are signed in to YouTube";
+
+/**
+ * yt-dlp's error lines in words for AvaTG users. yt-dlp's own advice is for its command line
+ * ("Use --cookies-from-browser…"), so the cases with an AvaTG setting point at that setting instead.
+ */
+export function explainError(msg: string): string {
+  return msg
+    .split("\n")
+    .map((line) => {
+      if (/sign in to confirm you.{0,3}re not a bot/i.test(line))
+        return `YouTube wants to confirm you're not a bot. This happens on some networks and VPNs. ${COOKIES_HINT}, or try another network.`;
+      if (/sign in to confirm your age|age[- ]restricted/i.test(line))
+        return `This video is age-restricted. ${COOKIES_HINT}.`;
+      if (/members[- ]only|join this channel/i.test(line))
+        return `This video is for channel members only. ${COOKIES_HINT} with a member account.`;
+      // Any other line: drop yt-dlp's command-line advice about cookies.
+      return line.replace(/\s*Use --cookies-from-browser or --cookies.*$/i, "");
+    })
+    .join("\n");
+}

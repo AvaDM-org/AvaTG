@@ -45,7 +45,10 @@ fn ytdlp_command(app: &AppHandle, cookies_browser: &Option<String>) -> Result<Co
     // Keep Deno's cache inside AvaTG's data folder instead of the user's ~/.cache/deno.
     let data_dir = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
     cmd.env("DENO_DIR", data_dir.join("deno-cache"));
+    // UTF-8 output everywhere: yt-dlp.exe otherwise writes in the Windows code page and titles and messages
+    // arrive with "�" in place of characters like ’.
     cmd.arg("--ignore-config")
+        .args(["--encoding", "utf-8"])
         .arg("--ffmpeg-location")
         .arg(&ffmpeg)
         .arg("--js-runtimes")

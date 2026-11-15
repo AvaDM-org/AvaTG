@@ -15,6 +15,7 @@ import {
   type DownloadEvent,
 } from "../../ipc";
 import { buildArgs } from "../../lib/presets";
+import { explainError } from "../../lib/youtube";
 import { downloadOptions, getSettings, useSettings } from "../settings/store";
 import { RunClock } from "./history";
 import { toastWarning, useDownloadLogs } from "./logs";
@@ -143,9 +144,9 @@ export const useDownloads = create<DownloadsStore>((set, get) => {
         const cur = find(id);
         const retries = cur?.autoRetries ?? 0;
         if (retries < getSettings().autoResume && !isPermanent(msg)) {
-          patch(id, { status: "queued", autoRetries: retries + 1, error: msg, ...times });
+          patch(id, { status: "queued", autoRetries: retries + 1, error: explainError(msg), ...times });
         } else {
-          patch(id, { status: "failed", error: msg, ...times });
+          patch(id, { status: "failed", error: explainError(msg), ...times });
         }
       }
     }

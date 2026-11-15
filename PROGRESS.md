@@ -163,6 +163,11 @@ Choices made while building these (2026-11-16, not yet seen by the owner; change
   those libraries in the release workflow and the AppImage is signed again; `hostenv::prepare` drops the bundle's
   empty GStreamer plugin path. Checked locally: the stripped 0.2.0 renders, quits cleanly, and the page process
   loads only host copies of those libraries. libxml2 and ICU 70 stay bundled (WebKit needs ICU 70).
+- **Windows text from yt-dlp.** yt-dlp.exe (PyInstaller) ignores `PYTHONUTF8` and wrote errors and titles in the
+  Windows code page, so ’ arrived as "�". `--encoding utf-8` is passed on every platform (`ytdlp_command`).
+  YouTube's bot check / age / members-only errors are reworded by `explainError` (`src/lib/youtube.ts`).
+- **v0.2.1 was published from the failed release run**: its AppImage still bundles the system libraries and the
+  release has no SHA256SUMS.txt. The script fix is in the next release.
 - **Do not set `WEBKIT_DISABLE_DMABUF_RENDERER`.** It was tried and caused parts of the window to stop repainting.
 - **Blur timing.** The window needs a native surface first, so `blur.rs` applies the blur after the window is
   shown (retrying) and sends `window-blur`; asking from the page at startup was too early in release builds.
