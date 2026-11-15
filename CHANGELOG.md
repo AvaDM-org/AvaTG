@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.2.1] - 2026-11-15
 
 ### Fixed
 - Updates install in place on every install type. `.deb` and `.rpm` installs no longer open the release page: the
