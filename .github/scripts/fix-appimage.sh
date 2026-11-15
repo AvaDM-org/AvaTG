@@ -14,6 +14,7 @@
 set -euo pipefail
 
 appimage=$(realpath "$1")
+chmod +x "$appimage" # a file downloaded from a release is not executable
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
