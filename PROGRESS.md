@@ -151,6 +151,18 @@ Choices made while building these (2026-11-16, not yet seen by the owner; change
   the owner's VPN proxy app) sent the webview's dev-server requests to the proxy. Fixed for dev builds by
   `GIO_USE_PROXY_RESOLVER=dummy` (`main.rs`, debug + Linux only) and Vite pinned to 127.0.0.1. Release builds load
   the frontend from inside the app.
+- **AppImage environment.** The AppImage starts AvaTG with `LD_LIBRARY_PATH`, `PYTHONHOME`, `GST_PLUGIN_*` etc.
+  pointing into the bundle. Passed on to child programs, a system FFmpeg loaded the bundle's GnuTLS and failed and a
+  pip yt-dlp looked for Python in the bundle, so 0.2.0's AppImage downloaded tools the system already had. Every
+  child program now runs with `hostenv::HostEnv` (also `open_external`, which replaces the opener plugin's
+  openPath/openUrl; "show in folder" uses D-Bus and is fine).
+- **AppImage crash on quit (0.2.0, Fedora 44 + NVIDIA laptop).** WebKitWebProcess aborted with
+  `free(): corrupted unsorted chunks` in its exit handlers. The host Mesa/LLVM/NVIDIA EGL ran against the bundle's
+  Ubuntu 22.04 GLib, Wayland, GStreamer, libelf, libzstd, libffi, systemd. Not reproduced on demand (5 tray quits
+  were clean), so the fix is the known one (tauri-apps/tauri#15665): `.github/scripts/fix-appimage.sh` removes
+  those libraries in the release workflow and the AppImage is signed again; `hostenv::prepare` drops the bundle's
+  empty GStreamer plugin path. Checked locally: the stripped 0.2.0 renders, quits cleanly, and the page process
+  loads only host copies of those libraries. libxml2 and ICU 70 stay bundled (WebKit needs ICU 70).
 - **Do not set `WEBKIT_DISABLE_DMABUF_RENDERER`.** It was tried and caused parts of the window to stop repainting.
 - **Blur timing.** The window needs a native surface first, so `blur.rs` applies the blur after the window is
   shown (retrying) and sends `window-blur`; asking from the page at startup was too early in release builds.
@@ -193,7 +205,9 @@ Ask the owner before inventing new UI rules; record answers here.
 - **Proxy**: System (KDE, GNOME, Windows, macOS, env vars) / Custom URL / None; used by yt-dlp, tool downloads and
   the updater. Needed on the owner's network.
 - **Updates like AvaDM**: tag → draft release → owner publishes. Check on launch, "Update now" notice, include
-  pre-releases switch. Windows, macOS and AppImage update themselves; `.deb`/`.rpm` open the release page. Signed.
+  pre-releases switch. Every install type updates in place and restarts (owner, 2026-11-15: "all platforms should
+  update the same"); `.deb`/`.rpm` go through `pkexec`, so the system asks for a password. Signed. Copies before
+  0.2.1 installed from `.deb`/`.rpm` still open the release page once.
 - **Release builds**: Windows NSIS, macOS arm64 + x64, Linux deb + rpm + AppImage. Owner declined build speed-ups.
 
 ## Claude Code setup for this repo

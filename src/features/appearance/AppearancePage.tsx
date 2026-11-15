@@ -1,14 +1,13 @@
 // Settings › Appearance: theme cards (built-in, your own, "New theme", "Import theme…") with Edit, Duplicate,
 // Export and Remove on each card's menu, the theme builder, and the glass effect.
 import { open as openFile, save as saveFile } from "@tauri-apps/plugin-dialog";
-import { openPath } from "@tauri-apps/plugin-opener";
 import { useState } from "react";
 import { toast, toastError } from "../../components/Toasts";
 import { Button, IconButton } from "../../components/ui/controls";
 import { Confirm } from "../../components/ui/Dialog";
 import { Icon } from "../../components/ui/Icon";
 import { Menu, MenuDivider, MenuItem, type Point } from "../../components/ui/Menu";
-import { themeExport, themesFolder } from "../../ipc";
+import { openExternal, themeExport, themesFolder } from "../../ipc";
 import { BUILT_IN_THEMES, cssColor, DEFAULT_THEME_ID, glassColor, serializeTheme, type Theme } from "../../lib/themes";
 import { Row, Section } from "../settings/rows";
 import { useSettings } from "../settings/store";
@@ -150,7 +149,7 @@ export function AppearancePage() {
           title="Theme files"
           desc="A theme is one JSON file of colours in AvaDM's format; AvaDM themes work too. Drop one on the window to import it"
         >
-          <Button onClick={async () => void openPath(await themesFolder()).catch(toastError)}>Open folder</Button>
+          <Button onClick={async () => void openExternal(await themesFolder()).catch(toastError)}>Open folder</Button>
         </Row>
       </Section>
       {removing && (

@@ -68,7 +68,8 @@ src-tauri/src/proxy.rs     the proxy setting and reading the desktop's proxy
 src-tauri/src/blur.rs      glass blur behind the window (Wayland ext_background_effect, KWin, window-vibrancy)
 src-tauri/src/tray.rs      tray menu, close to tray
 src-tauri/src/updater.rs   AvaTG's own updates from GitHub releases
-src-tauri/src/desktop.rs   Linux AppImage applications-menu entry; repairs it and the login item at startup
+src-tauri/src/desktop.rs   Linux AppImage applications-menu entry; repairs it and the login item at startup; opening files
+src-tauri/src/hostenv.rs   programs AvaTG starts get the user's environment, not the AppImage's library paths
 src/ipc.ts                 every Rust command and event, typed
 src/lib/                   pure logic with tests: presets → yt-dlp args, links, formatting, tool versions
 src/features/              downloads, picker (video dialog, playlist/channel page), settings, tools, updates
@@ -96,14 +97,17 @@ bun run tauri build    # installers in src-tauri/target/release/bundle (needs th
 
 Like AvaDM. `.github/workflows/check.yml` checks every push and pull request. `.github/workflows/release.yml`
 runs on a version tag and builds Windows (NSIS), macOS (Apple Silicon and Intel), Linux `.deb`, `.rpm` and AppImage
-into one **draft** release with `latest.json` (the update feed) and `SHA256SUMS.txt`; publish it by hand.
+into one **draft** release with `latest.json` (the update feed) and `SHA256SUMS.txt`; publish it by hand. The
+AppImage is then rebuilt without the core system libraries linuxdeploy bundles (`.github/scripts/fix-appimage.sh`
+explains why) and signed again.
 
 1. Set the same version in `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` and `package.json`.
 2. Add a `## [X.Y.Z]` section to `CHANGELOG.md` (it becomes the release notes).
 3. `git tag vX.Y.Z && git push origin vX.Y.Z` (a pre-release: `vX.Y.Z-rc.N`).
 
 The app checks `releases/latest` (or the highest release, pre-releases included, when that setting is on).
-Windows, macOS and the AppImage update themselves; `.deb`/`.rpm` installs open the release page. Updates are signed:
+Every install type updates itself in place and restarts; `.deb`/`.rpm` installs ask for the system password first
+(the updater installs the package with `pkexec`). Updates are signed:
 the public key is in `tauri.conf.json`, the private key and its password are the repo secrets
 `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Losing the private key means installed copies
 can no longer update. A local `tauri build` needs the same two values as environment variables.

@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- Updates install in place on every install type. `.deb` and `.rpm` installs no longer open the release page: the
+  update is downloaded and installed after the system asks for your password, then AvaTG restarts.
+- The Linux AppImage no longer asks to download yt-dlp and FFmpeg when they are already installed on the system.
+  Programs started from the AppImage (tools, and the apps that open files and links) now run with your normal
+  environment.
+- The Linux AppImage could crash when quitting on newer distros (seen on Fedora 44). It now uses the system's own
+  GLib, Wayland, GStreamer and related libraries instead of older bundled copies.
+
 ## [0.2.0] - 2026-11-15
 
 ### Downloads list

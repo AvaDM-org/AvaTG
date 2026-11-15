@@ -3,8 +3,9 @@
 //! - Releases are built by `.github/workflows/release.yml`; each carries a signed `latest.json` (Tauri updater).
 //! - Stable: `releases/latest/download/latest.json`. With "Include pre-release versions" on, the highest version
 //!   among all published releases (pre-releases included) wins.
-//! - Windows, macOS and the AppImage install the update and restart. A `.deb` or `.rpm` install belongs to the
-//!   package manager, so the frontend opens the release page instead (`install_channel`).
+//! - Every install type downloads, installs in place and restarts: Windows (NSIS, passive), macOS (the .app),
+//!   the AppImage (the file is replaced), and `.deb`/`.rpm` (the plugin installs the new package with
+//!   `pkexec`, so the system asks for the user's password; `install_channel` lets the card say so).
 
 use serde::Serialize;
 use std::sync::Mutex;
@@ -32,7 +33,8 @@ struct UpdateProgress {
     total: Option<u64>,
 }
 
-/// "auto": AvaTG can replace itself (Windows, macOS, AppImage). "package": installed by a package manager.
+/// "auto": AvaTG replaces itself. "package": a .deb/.rpm install, updated through the package manager with the
+/// user's password.
 #[tauri::command]
 pub fn install_channel() -> &'static str {
     if cfg!(target_os = "linux") && std::env::var_os("APPIMAGE").is_none() {

@@ -55,11 +55,11 @@ export default function App() {
         const info = await useUpdates.getState().check();
         if (info) {
           useToasts.getState().show(`AvaTG ${info.version} is available`, false, {
-            label: useUpdates.getState().channel === "package" ? "See what's new" : "Update now",
+            label: "Update now",
             run: () => {
               setSettingsPage("about");
               setPage("settings");
-              if (useUpdates.getState().channel === "auto") void useUpdates.getState().install();
+              void useUpdates.getState().install();
             },
           });
         }

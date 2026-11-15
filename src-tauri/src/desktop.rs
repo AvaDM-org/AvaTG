@@ -55,8 +55,33 @@ pub fn menu_entry_set(enabled: bool) -> Result<(), String> {
     }
 }
 
+/// Opens a file, folder or link with the user's default app. Unlike the opener plugin, the app is started
+/// with the user's own environment when AvaTG runs as an AppImage (see `hostenv`).
+#[tauri::command]
+pub fn open_external(target: String) -> Result<(), String> {
+    #[cfg(target_os = "linux")]
+    if crate::hostenv::in_appimage() {
+        use crate::hostenv::HostEnv;
+        use std::process::Stdio;
+        for mut cmd in open::commands(&target) {
+            cmd.host_env()
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null());
+            if let Ok(mut child) = cmd.spawn() {
+                // xdg-open may wait for the app; reap it without holding up the caller.
+                std::thread::spawn(move || child.wait());
+                return Ok(());
+            }
+        }
+        return Err(format!("No program found to open {target}"));
+    }
+    open::that_detached(&target).map_err(|e| format!("Could not open {target}: {e}"))
+}
+
 #[cfg(target_os = "linux")]
 mod linux {
+    use crate::hostenv::HostEnv;
     use std::path::PathBuf;
 
     const ID: &str = "org.avadm.avatg";
@@ -154,6 +179,7 @@ mod linux {
     fn refresh_menu(entry: &std::path::Path) {
         if let Some(dir) = entry.parent() {
             let _ = std::process::Command::new("update-desktop-database")
+                .host_env()
                 .arg(dir)
                 .output();
         }

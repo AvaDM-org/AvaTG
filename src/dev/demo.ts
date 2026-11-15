@@ -177,6 +177,7 @@ const handlers: Record<string, (a: Args) => unknown> = {
   window_blur: () => false,
   system_proxy: () => null,
   install_channel: () => "auto",
+  open_external: () => null,
   update_check: () => null,
   themes_list: () => [...themeFiles.values()],
   theme_save: (a) => void themeFiles.set(a.id as string, a.text as string),

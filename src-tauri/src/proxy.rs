@@ -112,7 +112,7 @@ fn parse_kde(text: &str) -> Option<String> {
 #[cfg(target_os = "linux")]
 async fn gnome_proxy() -> Option<String> {
     let get = |key: &'static str, schema: &'static str| async move {
-        let out = tokio::process::Command::new("gsettings")
+        let out = crate::ytdlp::hidden_command("gsettings")
             .args(["get", schema, key])
             .output()
             .await

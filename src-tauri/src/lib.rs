@@ -5,6 +5,7 @@ mod blur;
 mod db;
 mod desktop;
 mod files;
+mod hostenv;
 mod proxy;
 mod themes;
 mod tools;
@@ -20,6 +21,7 @@ const MINIMIZED_ARG: &str = "--minimized";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    hostenv::prepare();
     tauri::Builder::default()
         // Must be first: a second launch only brings the running window forward.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -81,6 +83,7 @@ pub fn run() {
             ytdlp::cancel_download,
             desktop::menu_entry_status,
             desktop::menu_entry_set,
+            desktop::open_external,
             db::downloads_list,
             db::downloads_save,
             db::downloads_delete,

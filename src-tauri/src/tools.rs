@@ -311,7 +311,7 @@ const TOOLS: [(&str, &str, &str); 3] = [
 /// The first `exe` on PATH (system-installed copy).
 fn find_on_path(exe: &str) -> Option<PathBuf> {
     let name = format!("{exe}{EXE}");
-    std::env::split_paths(&std::env::var_os("PATH")?)
+    std::env::split_paths(&crate::hostenv::path()?)
         .map(|dir| dir.join(&name))
         .find(|p| p.is_file())
 }

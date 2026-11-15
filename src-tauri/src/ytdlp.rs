@@ -18,9 +18,11 @@ use crate::tools::resolved_path;
 #[derive(Default)]
 pub struct Jobs(pub Mutex<HashMap<String, oneshot::Sender<()>>>);
 
-/// A Command that never opens a console window on Windows and talks UTF-8.
+/// A Command that never opens a console window on Windows, talks UTF-8 and runs with the user's own
+/// environment (not the AppImage's, see `hostenv`).
 pub fn hidden_command<S: AsRef<OsStr>>(program: S) -> Command {
     let mut cmd = Command::new(program);
+    crate::hostenv::HostEnv::host_env(&mut cmd);
     cmd.env("PYTHONUTF8", "1").env("PYTHONIOENCODING", "utf-8");
     #[cfg(windows)]
     {

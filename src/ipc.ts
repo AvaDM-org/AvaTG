@@ -86,6 +86,8 @@ export const readLinkList = (path: string) => invoke<string>("read_link_list", {
 export const renameDescription = (videoPath: string) => invoke<void>("rename_description", { videoPath });
 
 // desktop.rs
+/** Opens a file, folder or link with the default app (with the user's environment, also from the AppImage). */
+export const openExternal = (target: string) => invoke<void>("open_external", { target });
 /** The Linux AppImage's own applications-menu entry; `available` is false everywhere else. */
 export const menuEntryStatus = () => invoke<{ available: boolean; installed: boolean }>("menu_entry_status");
 export const setMenuEntry = (enabled: boolean) => invoke<void>("menu_entry_set", { enabled });
@@ -110,7 +112,7 @@ export interface UpdateInfo {
   prerelease: boolean;
   releasePage: string;
 }
-/** "auto": AvaTG can update itself; "package": installed by a package manager (.deb/.rpm), open the release page. */
+/** "auto": AvaTG replaces itself; "package": a .deb/.rpm install, updated in place after the system asks for a password. */
 export const installChannel = () => invoke<"auto" | "package">("install_channel");
 export const updateCheck = (includePrereleases: boolean) =>
   invoke<UpdateInfo | null>("update_check", { includePrereleases });

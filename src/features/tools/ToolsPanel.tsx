@@ -2,7 +2,6 @@
 // Used by the first-run screen and Settings > Tools.
 import { open as openFile } from "@tauri-apps/plugin-dialog";
 import { useEffect, useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { toastError } from "../../components/Toasts";
 import { Button, IconButton, ProgressBar } from "../../components/ui/controls";
 import { Icon } from "../../components/ui/Icon";
@@ -11,6 +10,7 @@ import {
   installTool,
   latestVersions,
   onToolProgress,
+  openExternal,
   type LatestVersions,
   type ToolInfo,
   type ToolProgress,
@@ -35,7 +35,7 @@ export function ProjectLink({ id, name }: { id: ToolId; name: string }) {
     <IconButton
       icon="link"
       label={`${name} project page`}
-      onClick={() => void openUrl(ABOUT[id].site).catch(toastError)}
+      onClick={() => void openExternal(ABOUT[id].site).catch(toastError)}
     />
   );
 }

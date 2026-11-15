@@ -6,14 +6,13 @@ import {
   enable as enableAutostart,
   isEnabled as autostartEnabled,
 } from "@tauri-apps/plugin-autostart";
-import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import { useEffect, useState } from "react";
 import { toast, toastError } from "../../components/Toasts";
 import { WindowControls } from "../../components/WindowControls";
 import { Button, IconButton, ProgressBar, Segmented, Stepper, Switch, TextField } from "../../components/ui/controls";
 import { Icon } from "../../components/ui/Icon";
 import { Dropdown, MenuItem } from "../../components/ui/Menu";
-import { menuEntryStatus, setMenuEntry, systemProxy, toolsDir } from "../../ipc";
+import { menuEntryStatus, openExternal, setMenuEntry, systemProxy, toolsDir } from "../../ipc";
 import { fmtBytes } from "../../lib/format";
 import logo from "../../assets/avatg-logo.png";
 import { AppearancePage } from "../appearance/AppearancePage";
@@ -400,7 +399,7 @@ function StoragePage() {
     void appDataDir().then(setData);
     void toolsDir().then(setTools);
   }, []);
-  const open = (dir: string) => openPath(dir).catch(toastError);
+  const open = (dir: string) => openExternal(dir).catch(toastError);
   return (
     <Section heading="FOLDERS">
       <Row title="Download history" desc="The list of downloads and how to resume them (avatg.db)">
@@ -418,7 +417,7 @@ function StoragePage() {
 function AboutPage({ version }: { version: string }) {
   const [checkOnLaunch, setCheckOnLaunch] = useSetting("checkUpdates");
   const [pre, setPre] = useSetting("includePrereleases");
-  const { status, info, channel, check, error } = useUpdates();
+  const { status, info, check, error } = useUpdates();
   return (
     <>
       <div className={s.aboutHead}>
@@ -452,9 +451,7 @@ function AboutPage({ version }: { version: string }) {
                 ? `AvaTG ${version} is the newest version`
                 : status === "failed" && !info
                   ? (error ?? "The check failed")
-                  : channel === "package"
-                    ? "Installed with your package manager; updates come from the release page"
-                    : `AvaTG ${version}`
+                  : `AvaTG ${version}`
           }
           descTone={status === "failed" && !info ? "bad" : status === "upToDate" ? "ok" : undefined}
         >
@@ -465,7 +462,7 @@ function AboutPage({ version }: { version: string }) {
       </Section>
       <Section heading="AVATG">
         <Row title="Project page" desc="Source, issues and releases on GitHub">
-          <Button onClick={() => void openUrl("https://github.com/AvaDM-org/AvaTG").catch(toastError)}>
+          <Button onClick={() => void openExternal("https://github.com/AvaDM-org/AvaTG").catch(toastError)}>
             Open GitHub
           </Button>
         </Row>
@@ -484,7 +481,9 @@ function UpdateCard() {
     status === "downloading"
       ? `${fmtBytes(downloaded)}${total ? ` of ${fmtBytes(total)}` : ""}`
       : status === "installing"
-        ? "Installing; AvaTG restarts in a moment"
+        ? channel === "package"
+          ? "Installing; enter your password when the system asks. AvaTG restarts after"
+          : "Installing; AvaTG restarts in a moment"
         : status === "failed"
           ? (error ?? "The update failed")
           : `You have ${info.current}${info.prerelease ? " · this is a pre-release" : ""}`;
@@ -501,15 +500,9 @@ function UpdateCard() {
           </b>
           <small className={`tnum ${status === "failed" ? s.bad : ""}`}>{line}</small>
         </div>
-        {channel === "package" ? (
-          <Button variant="primary" onClick={() => void openUrl(info.releasePage).catch(toastError)}>
-            Open release page
-          </Button>
-        ) : (
-          <Button variant="primary" disabled={busy} onClick={() => void install()}>
-            {status === "failed" ? "Try again" : "Update now"}
-          </Button>
-        )}
+        <Button variant="primary" disabled={busy} onClick={() => void install()}>
+          {status === "failed" ? "Try again" : "Update now"}
+        </Button>
       </div>
       {busy && <ProgressBar percent={status === "installing" ? null : pct} height={8} />}
     </div>

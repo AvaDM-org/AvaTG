@@ -8,7 +8,7 @@ export type UpdateStatus = "idle" | "checking" | "upToDate" | "available" | "dow
 interface UpdatesStore {
   status: UpdateStatus;
   info: UpdateInfo | null;
-  /** "package": a .deb/.rpm install; updates come from the release page */
+  /** "package": a .deb/.rpm install; installing the update asks for the user's password */
   channel: "auto" | "package";
   downloaded: number;
   total: number | null;

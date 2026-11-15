@@ -85,8 +85,54 @@ jobs:
           args: ${{ matrix.args }}
           updaterJsonPreferNsis: true
 
-  checksums:
+  # The AppImage without the core system libraries linuxdeploy bundles (.github/scripts/fix-appimage.sh says why),
+  # signed again for the updater, with its latest.json entries updated.
+  appimage:
     needs: [version, build]
+    runs-on: ubuntu-22.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      APPIMAGETOOL: https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage
+      APPIMAGE_RUNTIME_URL: https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Download the AppImage and the tools
+        run: |
+          set -euo pipefail
+          mkdir -p dist tools
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --dir dist -p '*.AppImage' -p latest.json
+          curl -fsSL -o tools/appimagetool "$APPIMAGETOOL"
+          curl -fsSL -o tools/runtime-x86_64 "$APPIMAGE_RUNTIME_URL"
+          chmod +x tools/appimagetool
+          echo "$PWD/tools" >> "$GITHUB_PATH"
+      - name: Remove the bundled system libraries
+        env:
+          APPIMAGE_RUNTIME: tools/runtime-x86_64
+        run: bash .github/scripts/fix-appimage.sh dist/*.AppImage
+      - name: Sign and upload
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          app=$(ls dist/*.AppImage)
+          name=$(basename "$app")
+          rm -f "$app.sig"
+          bun run tauri signer sign "$app"
+          sig=$(cat "$app.sig")
+          # Every platform entry whose download is this AppImage gets the new signature.
+          jq --arg name "$name" --arg sig "$sig" \
+            '.platforms |= with_entries(if (.value.url | endswith("/" + $name)) then .value.signature = $sig else . end)' \
+            dist/latest.json > dist/latest.new.json
+          [ "$(jq --arg sig "$sig" '[.platforms[] | select(.signature == $sig)] | length' dist/latest.new.json)" -ge 1 ] ||
+            { echo "::error::No latest.json entry points at $name"; exit 1; }
+          mv dist/latest.new.json dist/latest.json
+          gh release upload "$GITHUB_REF_NAME" "$app" "$app.sig" dist/latest.json --repo "$GITHUB_REPOSITORY" --clobber
+
+  checksums:
+    needs: [version, build, appimage]
     runs-on: ubuntu-latest
     steps:
       - name: SHA256SUMS.txt for every asset
