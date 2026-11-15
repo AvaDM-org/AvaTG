@@ -6,6 +6,8 @@
 - Windows: yt-dlp's messages and video titles showed "�" in place of characters like ’ (yt-dlp now writes UTF-8).
 - "Sign in to confirm you're not a bot" and similar YouTube errors now say what to do in AvaTG (choose a browser
   for cookies in Settings › Files › Account) instead of showing yt-dlp's command-line advice.
+- Windows: "Could not copy Chrome cookie database" now explains that Chrome, Edge and other Chromium browsers lock
+  and encrypt their cookies on Windows, and suggests Firefox. Choosing one of them for cookies shows the same warning.
 - The Linux AppImage's removal of the bundled system libraries (the crash fix listed under 0.2.1) did not run for
   the 0.2.1 release; it is in this one.
 
